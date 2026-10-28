@@ -1,0 +1,27 @@
+query_id,raw_query_text,detected_language,intent,extracted_entity,mapped_node,confidence_score
+NLP_001,Take me to Sanskrit Department,English,Navigate,Sanskrit Department,Sanskrit Department,0.98
+NLP_002,Library ಎಲ್ಲಿದೆ?,Kannada,Locate,Library,Central Library,0.96
+NLP_003,ಕಂಪ್ಯೂಟರ್ ಲ್ಯಾಬ್ ಎಲ್ಲಿದೆ?,Kannada,Locate,ಕಂಪ್ಯೂಟರ್ ಲ್ಯಾಬ್,Computer Lab 1,0.95
+NLP_004,कंप्यूटर लैब कहाँ है?,Hindi,Locate,कंप्यूटर लैब,Computer Lab 1,0.97
+NLP_005,Where is the Principal Office?,English,Locate,Principal Office,Principal Office,0.99
+NLP_006,ಸಂಸ್ಕೃತ ತರಗತಿ ಕೊಠಡಿ ತೋರಿಸಿ,Kannada,Navigate,ಸಂಸ್ಕೃತ ತರಗತಿ,Sanskrit Classrooms,0.96
+NLP_007,कैंटीन जाने का रास्ता बताओ,Hindi,Navigate,कैंटीन,Canteen,0.98
+NLP_008,Show me the way to Physics Lab,English,Navigate,Physics Lab,Physics Lab,0.99
+NLP_009,ಲೈಬ್ರರಿ ಎಲ್ಲಿ ಬರುತ್ತದೆ?,Kannada,Locate,ಲೈಬ್ರರಿ,Central Library,0.95
+NLP_010,मुझे बायोटेक्नोलॉजी लैब जाना है,Hindi,Navigate,बायोटेक्नोलॉजी लैब,Biotechnology Lab,0.97
+NLP_011,Guide me to Computer Science Department,English,Navigate,Computer Science Department,Computer Science Department,0.99
+NLP_012,ಅಕೌಂಟ್ಸ್ ಆಫೀಸ್ ಎಲ್ಲಿ?,Kannada,Locate,ಅಕೌಂಟ್ಸ್ ಆಫೀಸ್,Accounts & Fee Counter,0.94
+NLP_013,परीक्षा विभाग कहाँ स्थित है?,Hindi,Locate,परीक्षा विभाग,Examination Cell,0.97
+NLP_014,Wheelchair route to Auditorium,English,Navigate,Auditorium,Auditorium,0.98
+NLP_015,ಕ್ರೀಡಾಂಗಣಕ್ಕೆ ಹೇಗೆ ಹೋಗುವುದು?,Kannada,Navigate,ಕ್ರೀಡಾಂಗಣ,Sports Ground,0.96
+NLP_016,भाषा प्रयोगशाला की दिशा बताएं,Hindi,Navigate,भाषा प्रयोगशाला,Language Lab,0.95
+NLP_017,How to reach Biotechnology Lab?,English,Navigate,Biotechnology Lab,Biotechnology Lab,0.99
+NLP_018,ಪ್ರಾಂಶುಪಾಲರ ಕೊಠಡಿ ತೋರಿಸಿ,Kannada,Locate,ಪ್ರಾಂಶುಪಾಲರ ಕೊಠಡಿ,Principal Office,0.98
+NLP_019,Gym kidhar hai?,Hindi,Locate,Gym,Gym,0.92
+NLP_020,Take me to Chemistry Department,English,Navigate,Chemistry Department,Chemistry Department,0.99
+NLP_021,Where is Classroom G1?,English,Locate,Classroom G1,Classroom G1,0.98
+NLP_022,ರಿಪ್ರೋಗ್ರಫಿ ಕೊಠಡಿ ಎಲ್ಲಿದೆ?,Kannada,Locate,ರಿಪ್ರೋಗ್ರಫಿ ಕೊಠಡಿ,Reprography Room,0.96
+NLP_023,गोल्डन जुबली सेमिनार हॉल का रास्ता,Hindi,Navigate,गोल्डन जुबली सेमिनार हॉल,Golden Jubilee Seminar Hall,0.97
+NLP_024,Controller of Examination office,English,Locate,Controller of Examination,Controller of Examination,0.98
+NLP_025,ತರಗತಿ G8 ಗೆ ದಾರಿ ತೋರಿಸಿ,Kannada,Navigate,ತರಗತಿ G8,Classroom G8,0.97
+NLP_026,कक्षा जी 5 कहाँ है?,Hindi,Locate,कक्षा जी 5,Classroom G5,0.96

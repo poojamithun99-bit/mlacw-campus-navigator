@@ -1,0 +1,18 @@
+log_id,timestamp,start_location,destination_location,language,is_wheelchair_mode,distance_meters,estimated_time_min,path_nodes_count,status
+NAV_5001,2026-10-01 08:45:12,Main Gate,Computer Science Department,English,false,95,1.5,4,Completed
+NAV_5002,2026-10-01 09:10:45,Main Gate,Central Library,Kannada,false,87,1.3,4,Completed
+NAV_5003,2026-10-01 09:30:20,Security Cabin,Sanskrit Department,English,true,85,1.3,3,Completed
+NAV_5004,2026-10-01 10:05:18,Block A Entrance Foyer,Computer Lab 1,Hindi,false,68,1.0,3,Completed
+NAV_5005,2026-10-01 11:20:00,Block B Ground Foyer,Canteen,English,false,93,1.4,3,Completed
+NAV_5006,2026-10-01 12:15:33,Main Gate,Examination Cell,Kannada,false,70,1.1,4,Completed
+NAV_5007,2026-10-01 13:40:22,Canteen,Biotechnology Lab,English,false,145,2.2,5,Completed
+NAV_5008,2026-10-01 14:10:05,Parking Area & Ramp,Principal Office,Hindi,true,55,0.8,3,Completed
+NAV_5009,2026-10-02 08:50:41,Main Gate,Commerce Department,English,false,140,2.2,5,Completed
+NAV_5010,2026-10-02 09:15:19,Block A Entrance Foyer,Physics Lab,Kannada,false,72,1.1,4,Completed
+NAV_5011,2026-10-02 10:35:50,Main Gate,Sanskrit Classrooms,Kannada,false,95,1.5,4,Completed
+NAV_5012,2026-10-02 11:45:00,Security Cabin,Digital Library & E-Resource Center,English,false,102,1.6,5,Completed
+NAV_5013,2026-10-02 13:00:15,Block C Main Foyer,Gym,English,false,80,1.2,3,Completed
+NAV_5014,2026-10-02 14:22:40,Main Gate,Biotechnology Department,Hindi,true,135,2.1,5,Completed
+NAV_5015,2026-10-02 15:10:11,Administrative Block Foyer,Language Lab,English,false,115,1.8,4,Completed
+NAV_5016,2026-10-03 08:15:30,Main Gate,Computer Lab 2,English,false,113,1.7,5,Completed
+NAV_5017,2026-10-03 08:28:44,Main Gate,Sanskrit Department,Kannada,true,105,1.6,4,Completed

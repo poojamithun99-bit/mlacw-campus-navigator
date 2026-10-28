@@ -1,0 +1,30 @@
+classroom_id,room_number,room_name,block,floor,capacity,facilities,is_wheelchair_accessible,department_id,location_id
+CR_001,G1,Classroom G1,Left Wing,0,65,Smart Projector + Acoustic Audio + Podium,True,DEPT_15,LOC_014
+CR_002,G2,Classroom G2,Left Wing,0,65,Smartboard + High-speed Wi-Fi,True,DEPT_15,LOC_015
+CR_003,G3,Classroom G3,Left Wing,0,65,Smartboard + Ergonomic Benches,True,DEPT_15,LOC_016
+CR_004,G4,Classroom G4,Left Wing,0,60,Interactive Display + Dual Speaker System,True,DEPT_15,LOC_017
+CR_005,G5,Classroom G5,Left Wing,0,60,Digital Smartboard + Whiteboard,True,DEPT_15,LOC_018
+CR_006,G6,Classroom G6,Left Wing,0,60,Projector + Central PA Audio,True,DEPT_15,LOC_019
+CR_007,G7,Classroom G7,Left Wing,0,65,HD Screen + Faculty Mic System,True,DEPT_15,LOC_020
+CR_008,G8,Classroom G8,Left Wing,0,65,Interactive Panel + Wi-Fi Hotspot,True,DEPT_15,LOC_021
+CR_009,F1,Classroom F1,North Wing,1,65,Smart Projector + Acoustic Audio + Podium,True,DEPT_15,LOC_040
+CR_010,F2,Classroom F2,North Wing,1,65,Smartboard + High-speed Wi-Fi,True,DEPT_15,LOC_038
+CR_011,F3,Classroom F3,North Wing,1,65,Smartboard + Ergonomic Benches,True,DEPT_15,LOC_037
+CR_012,F4,Classroom F4,North Wing,1,60,Interactive Display + Dual Speaker System,True,DEPT_15,LOC_036
+CR_013,F5,Classroom F5,West Wing,1,70,Digital Smartboard + Whiteboard + Dual Projector,True,DEPT_15,LOC_045
+CR_014,S1,Classroom S1,West Wing,2,65,Smart Projector + High-speed Wi-Fi,True,DEPT_08,LOC_062
+CR_015,S2,Classroom S2,West Wing,2,65,Digital Smartboard + Whiteboard,True,DEPT_08,LOC_063
+CR_016,S3,Classroom S3,West Wing,2,65,Smartboard + Audio System,True,DEPT_08,LOC_064
+CR_017,S4,Classroom S4,West Wing,2,60,Interactive Flat Panel + Dual Speakers,True,DEPT_08,LOC_068
+CR_018,S5,Classroom S5,West Wing,2,60,Smart Projector + Acoustic Podium,True,DEPT_08,LOC_069
+CR_019,S6,Classroom S6,East Wing,2,65,Smartboard + Ergonomic Seating,True,DEPT_01,LOC_072
+CR_020,S7,Classroom S7,East Wing,2,65,Interactive Panel + Digital Whiteboard,True,DEPT_01,LOC_073
+CR_021,S8,Classroom S8,East Wing,2,60,Projector + Central PA Audio,True,DEPT_01,LOC_076
+CR_022,S9,Classroom S9,Connector Corridor,2,65,Modern Smartboard + Wooden Striped Floor,True,DEPT_09,LOC_083
+CR_023,S10,Classroom S10,Connector Corridor,2,65,Interactive Display + Acoustic Ceiling,True,DEPT_09,LOC_084
+CR_024,S11,Classroom S11,Connector Corridor,2,65,Smart Projector + Polished Flooring,True,DEPT_09,LOC_085
+CR_025,S12,Classroom S12,Connector Corridor,2,70,Panoramic Glazed Window + Smartboard + PA System,True,DEPT_09,LOC_086
+CR_026,LH3,Third Floor Lecture Hall,East Wing,3,120,Tiered Gallery Seating + Dual HD Projection + Wireless Mic,True,DEPT_06,LOC_097
+CR_027,G9,Classroom G9,Left Wing,0,65,Smart Projector + Acoustic Audio + Podium,True,DEPT_15,LOC_105
+CR_028,G10,Classroom G10,Left Wing,0,65,Smartboard + High-speed Wi-Fi,True,DEPT_15,LOC_106
+CR_029,G11,Classroom G11,Left Wing,0,65,Smartboard + Ergonomic Benches,True,DEPT_15,LOC_107

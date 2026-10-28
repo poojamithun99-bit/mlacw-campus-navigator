@@ -1,0 +1,175 @@
+path_id,source_node,target_node,distance_meters,path_type,is_accessible,crowd_level,transition_type
+P_001,Main Gate,Security Cabin,20.0,Open Walkway,True,Low,Horizontal
+P_002,Security Cabin,Administrative Block Foyer,15.0,Corridor,True,Low,Horizontal
+P_003,Security Cabin,Main Reception Staircase,12.0,Open Walkway,True,Low,Horizontal
+P_004,Administrative Block Foyer,Main Reception Staircase,6.0,Corridor,True,Low,Horizontal
+P_005,Campus Central Elevator,Main Reception Staircase,6.0,Corridor,True,Low,Horizontal
+P_006,College Garden Walkway,Main Reception Staircase,10.0,Open Walkway,True,Low,Horizontal
+P_007,Security Cabin,Parking Area & Ramp,15.0,Open Walkway,True,Low,Horizontal
+P_008,Administrative Block Foyer,Principal Office,10.0,Corridor,True,Low,Horizontal
+P_009,Administrative Block Foyer,Vice Principal Office,12.0,Corridor,True,Low,Horizontal
+P_010,Administrative Block Foyer,Administrative Office,10.0,Corridor,True,Low,Horizontal
+P_011,Administrative Block Foyer,Medical & First Aid Room,15.0,Corridor,True,Low,Horizontal
+P_012,Administrative Block Foyer,Campus Central Elevator,10.0,Corridor,True,Low,Horizontal
+P_013,Security Cabin,PU College Stairs,18.0,Open Walkway,True,Low,Horizontal
+P_014,Administrative Block Foyer,PU College Stairs,15.0,Corridor,True,Low,Horizontal
+P_015,PU College Stairs,Reprography Room,8.0,Corridor,True,Low,Horizontal
+P_016,Reprography Room,Mushroom Cultivation Facility,8.0,Corridor,True,Low,Horizontal
+P_017,Mushroom Cultivation Facility,Golden Jubilee Seminar Hall,10.0,Corridor,True,Low,Horizontal
+P_018,PU College Stairs,Golden Jubilee Seminar Hall,12.0,Corridor,True,Low,Horizontal
+P_019,PU College Stairs,Xerox & Stationery Kiosk,10.0,Open Walkway,True,Low,Horizontal
+P_020,Golden Jubilee Seminar Hall,Classroom G1,10.0,Corridor,True,Low,Horizontal
+P_021,Classroom G1,Classroom G2,10.0,Corridor,True,Low,Horizontal
+P_022,Classroom G2,Classroom G3,10.0,Corridor,True,Low,Horizontal
+P_023,Classroom G3,Classroom G4,10.0,Corridor,True,Low,Horizontal
+P_024,Classroom G4,Classroom G5,10.0,Corridor,True,Low,Horizontal
+P_025,Classroom G5,Classroom G6,10.0,Corridor,True,Low,Horizontal
+P_026,Classroom G6,Classroom G7,10.0,Corridor,True,Low,Horizontal
+P_027,Classroom G7,Classroom G8,10.0,Corridor,True,Low,Horizontal
+P_028,Classroom G8,Classroom G9,10.0,Corridor,True,Low,Horizontal
+P_029,Classroom G9,Classroom G10,10.0,Corridor,True,Low,Horizontal
+P_030,Classroom G10,Classroom G11,10.0,Corridor,True,Low,Horizontal
+P_031,Classroom G11,Controller of Examination,8.0,Corridor,True,Low,Horizontal
+P_032,Controller of Examination,Sports & Gym,10.0,Corridor,True,Low,Horizontal
+P_033,Sports & Gym,South Staircase,8.0,Corridor,True,Low,Horizontal
+P_034,South Staircase,Girls Washroom,6.0,Corridor,True,Low,Horizontal
+P_035,Sports & Gym,Canteen Area,18.0,Corridor,True,Low,Horizontal
+P_036,Girls Washroom,Canteen Area,15.0,Corridor,True,Low,Horizontal
+P_037,Security Cabin,College Garden Walkway,15.0,Open Walkway,True,Low,Horizontal
+P_038,Administrative Block Foyer,College Garden Walkway,15.0,Open Walkway,True,Low,Horizontal
+P_039,College Garden Walkway,Canteen Area,30.0,Open Walkway,True,Low,Horizontal
+P_040,Canteen Area,Canteen Kitchen,10.0,Corridor,True,Low,Horizontal
+P_041,Main Reception Staircase,Main Reception Staircase (Floor 1),12.0,Stairs,False,Low,Vertical
+P_042,PU College Stairs,PU College Stairs (Floor 1),12.0,Stairs,False,Low,Vertical
+P_043,South Staircase,South Staircase (Floor 1),12.0,Stairs,False,Low,Vertical
+P_044,Campus Central Elevator,Campus Central Elevator (Floor 1),12.0,Elevator,True,Low,Vertical
+P_045,Main Reception Staircase (Floor 1),Campus Central Elevator (Floor 1),6.0,Corridor,True,Low,Horizontal
+P_046,Main Reception Staircase (Floor 1),Classroom F4,8.0,Corridor,True,Low,Horizontal
+P_047,Main Reception Staircase (Floor 1),Classroom F1,8.0,Corridor,True,Low,Horizontal
+P_048,Main Reception Staircase (Floor 1),PU College Stairs (Floor 1),10.0,Corridor,True,Low,Horizontal
+P_049,Main Reception Staircase (Floor 1),Biotechnology Lab (PG),8.0,Corridor,True,Low,Horizontal
+P_050,Main Reception Staircase (Floor 1),Dept. of Botany,10.0,Corridor,True,Low,Horizontal
+P_051,PU College Stairs (Floor 1),Campus Central Elevator (Floor 1),6.0,Corridor,True,Low,Horizontal
+P_052,Campus Central Elevator (Floor 1),Biotechnology Lab (PG),6.0,Corridor,True,Low,Horizontal
+P_053,PU College Stairs (Floor 1),Biotechnology Lab (PG),8.0,Corridor,True,Low,Horizontal
+P_054,Biotechnology Lab (PG),Biotechnology Lab (UG),8.0,Corridor,True,Low,Horizontal
+P_055,PU College Stairs (Floor 1),Faculty Washroom (First Floor),6.0,Corridor,True,Low,Horizontal
+P_056,PU College Stairs (Floor 1),Classroom F4,8.0,Corridor,True,Low,Horizontal
+P_057,Campus Central Elevator (Floor 1),Classroom F4,8.0,Corridor,True,Low,Horizontal
+P_058,Classroom F4,Classroom F3,8.0,Corridor,True,Low,Horizontal
+P_059,Classroom F3,Classroom F2,8.0,Corridor,True,Low,Horizontal
+P_060,Classroom F2,Dept. of Botany,8.0,Corridor,True,Low,Horizontal
+P_061,Classroom F2,Classroom F1,8.0,Corridor,True,Low,Horizontal
+P_062,Classroom F3,Classroom F1,8.0,Corridor,True,Low,Horizontal
+P_063,Dept. of Botany,Dept. of Journalism,10.0,Corridor,True,Low,Horizontal
+P_064,Dept. of Botany,Botany Lab (PG),8.0,Corridor,True,Low,Horizontal
+P_065,Dept. of Journalism,Botany Lab (PG),8.0,Corridor,True,Low,Horizontal
+P_066,Botany Lab (PG),Botany Lab (UG),8.0,Corridor,True,Low,Horizontal
+P_067,Botany Lab (UG),Microbiology Lab (Floor 1),12.0,Corridor,True,Low,Horizontal
+P_068,Microbiology Lab (Floor 1),Classroom F5,12.0,Corridor,True,Low,Horizontal
+P_069,Classroom F5,Physics Lab III,8.0,Corridor,True,Low,Horizontal
+P_070,Physics Lab III,Dept. of Physics (UG) & Faculty Chamber,10.0,Corridor,True,Low,Horizontal
+P_071,Dept. of Physics (UG) & Faculty Chamber,Physics Lab II,10.0,Corridor,True,Low,Horizontal
+P_072,Physics Lab II,Dept. of Physics (PU),10.0,Corridor,True,Low,Horizontal
+P_073,Dept. of Physics (PU),Physics Lab I,8.0,Corridor,True,Low,Horizontal
+P_074,Physics Lab I,South Staircase (Floor 1),8.0,Corridor,True,Low,Horizontal
+P_075,South Staircase (Floor 1),Floor 1 Student Washroom,6.0,Corridor,True,Low,Horizontal
+P_076,Floor 1 Student Washroom,Dept. of Chemistry & Staff Room,6.0,Corridor,True,Low,Horizontal
+P_077,South Staircase (Floor 1),Dept. of Chemistry & Staff Room,8.0,Corridor,True,Low,Horizontal
+P_078,Dept. of Chemistry & Staff Room,Chemistry Lab I,8.0,Corridor,True,Low,Horizontal
+P_079,Chemistry Lab I,Chemistry Research Centre,8.0,Corridor,True,Low,Horizontal
+P_080,Chemistry Research Centre,Chemistry Lab II,8.0,Corridor,True,Low,Horizontal
+P_081,Chemistry Lab II,Chemistry Lab III,8.0,Corridor,True,Low,Horizontal
+P_082,Chemistry Lab III,Biochemistry Lab (PG),10.0,Corridor,True,Low,Horizontal
+P_083,Biochemistry Lab (PG),Dept. of Life Sciences Staff Room,8.0,Corridor,True,Low,Horizontal
+P_084,Dept. of Life Sciences Staff Room,Zoology Lab (UG),8.0,Corridor,True,Low,Horizontal
+P_085,Zoology Lab (UG),Biotechnology Lab (UG),10.0,Corridor,True,Low,Horizontal
+P_086,Main Reception Staircase (Floor 1),Main Reception Staircase (Floor 2),12.0,Stairs,False,Low,Vertical
+P_087,PU College Stairs (Floor 1),PU College Stairs (Floor 2),12.0,Stairs,False,Low,Vertical
+P_088,South Staircase (Floor 1),South Staircase (Floor 2),12.0,Stairs,False,Low,Vertical
+P_089,Campus Central Elevator (Floor 1),Campus Central Elevator (Floor 2),12.0,Elevator,True,Low,Vertical
+P_090,PU College Stairs (Floor 2),Classroom S1,8.0,Corridor,True,Low,Horizontal
+P_091,Classroom S1,Classroom S2,8.0,Corridor,True,Low,Horizontal
+P_092,Classroom S2,Classroom S3,8.0,Corridor,True,Low,Horizontal
+P_093,Classroom S3,Floor 2 West Restroom,6.0,Corridor,True,Low,Horizontal
+P_094,Floor 2 West Restroom,Campus Central Elevator (Floor 2),6.0,Corridor,True,Low,Horizontal
+P_095,Classroom S3,Campus Central Elevator (Floor 2),8.0,Corridor,True,Low,Horizontal
+P_096,PU College Stairs (Floor 2),Campus Central Elevator (Floor 2),14.0,Corridor,True,Low,Horizontal
+P_097,Campus Central Elevator (Floor 2),Central Library,10.0,Corridor,True,Low,Horizontal
+P_098,Central Library,Mathematics Department,8.0,Corridor,True,Low,Horizontal
+P_099,Central Library,Classroom S4,10.0,Corridor,True,Low,Horizontal
+P_100,Classroom S4,Classroom S5,8.0,Corridor,True,Low,Horizontal
+P_101,Classroom S5,Floor 2 North Apex Restroom,8.0,Corridor,True,Low,Horizontal
+P_102,Floor 2 North Apex Restroom,North-East Staircase (Floor 2),12.0,Corridor,True,Low,Horizontal
+P_103,North-East Staircase (Floor 2),Classroom S6,8.0,Corridor,True,Low,Horizontal
+P_104,Classroom S6,Classroom S7,8.0,Corridor,True,Low,Horizontal
+P_105,Classroom S7,Computer Lab 1,8.0,Corridor,True,Low,Horizontal
+P_106,Computer Lab 1,Dept. of Computer Science & Staff Room,6.0,Corridor,True,Low,Horizontal
+P_107,Dept. of Computer Science & Staff Room,Classroom S8,8.0,Corridor,True,Low,Horizontal
+P_108,Classroom S8,Computer Lab 2,8.0,Corridor,True,Low,Horizontal
+P_109,Computer Lab 2,Electronics & Hardware Lab,8.0,Corridor,True,Low,Horizontal
+P_110,Electronics & Hardware Lab,Language Lab,8.0,Corridor,True,Low,Horizontal
+P_111,Language Lab,Dept. of Commerce & Management (BBA),8.0,Corridor,True,Low,Horizontal
+P_112,Dept. of Commerce & Management (BBA),KNV Shastri Auditorium,10.0,Corridor,True,Low,Horizontal
+P_113,KNV Shastri Auditorium,South Staircase (Floor 2),8.0,Corridor,True,Low,Horizontal
+P_114,Classroom S1,Classroom S9,10.0,Corridor,True,Low,Horizontal
+P_115,PU College Stairs (Floor 2),Classroom S9,12.0,Corridor,True,Low,Horizontal
+P_116,Classroom S9,Classroom S10,8.0,Corridor,True,Low,Horizontal
+P_117,Classroom S10,Classroom S11,8.0,Corridor,True,Low,Horizontal
+P_118,Classroom S11,Classroom S12,8.0,Corridor,True,Low,Horizontal
+P_119,Classroom S12,Main Reception Staircase (Floor 2),6.0,Corridor,True,Low,Horizontal
+P_120,Main Reception Staircase (Floor 2),Dept. of Commerce & Management (BBA),15.0,Corridor,True,Low,Horizontal
+P_121,Main Reception Staircase (Floor 2),South Staircase (Floor 2),18.0,Corridor,True,Low,Horizontal
+P_122,Campus Central Elevator (Floor 2),Classroom S9,16.0,Corridor,True,Low,Horizontal
+P_123,Campus Central Elevator (Floor 2),Main Reception Staircase (Floor 2),20.0,Corridor,True,Low,Horizontal
+P_124,Campus Central Elevator (Floor 2),Campus Central Elevator (Floor 3),12.0,Elevator,True,Low,Vertical
+P_125,PU College Stairs (Floor 2),PU College Stairs (Floor 3),12.0,Stairs,False,Low,Vertical
+P_126,South Staircase (Floor 2),South Staircase (Floor 3),12.0,Stairs,False,Low,Vertical
+P_127,North-East Staircase (Floor 2),North-East Staircase (Floor 3),12.0,Stairs,False,Low,Vertical
+P_128,Main Reception Staircase (Floor 2),Main Reception Staircase (Floor 3),12.0,Stairs,False,Low,Vertical
+P_129,PU College Stairs (Floor 3),Animal Cell Culture Lab,8.0,Corridor,True,Low,Horizontal
+P_130,Animal Cell Culture Lab,Life Science Research Centre,8.0,Corridor,True,Low,Horizontal
+P_131,Life Science Research Centre,Classroom PG T1,8.0,Corridor,True,Low,Horizontal
+P_132,Classroom PG T1,Campus Central Elevator (Floor 3),8.0,Corridor,True,Low,Horizontal
+P_133,PU College Stairs (Floor 3),Campus Central Elevator (Floor 3),8.0,Corridor,True,Low,Horizontal
+P_134,Campus Central Elevator (Floor 3),Library (PG),6.0,Corridor,True,Low,Horizontal
+P_135,Main Reception Staircase (Floor 3),Student Open Lounge (Third Floor Level),6.0,Open Walkway,True,Low,Horizontal
+P_136,Campus Central Elevator (Floor 3),Student Open Lounge (Third Floor Level),14.0,Corridor,True,Low,Horizontal
+P_137,Student Open Lounge (Third Floor Level),Third Floor Lecture Hall,12.0,Corridor,True,Low,Horizontal
+P_138,North-East Staircase (Floor 3),Third Floor Lecture Hall,8.0,Corridor,True,Low,Horizontal
+P_139,Third Floor Lecture Hall,Business Lab,8.0,Corridor,True,Low,Horizontal
+P_140,Business Lab,Dept. of Commerce (UG & PG),8.0,Corridor,True,Low,Horizontal
+P_141,Dept. of Commerce (UG & PG),Dept. of Commerce Research Centre & UGC Centre,8.0,Corridor,True,Low,Horizontal
+P_142,Dept. of Commerce Research Centre & UGC Centre,DBT-Bioinformatics Facility,8.0,Corridor,True,Low,Horizontal
+P_143,DBT-Bioinformatics Facility,South Staircase (Floor 3),8.0,Corridor,True,Low,Horizontal
+P_144,Student Open Lounge (Third Floor Level),Dept. of Commerce (UG & PG),14.0,Corridor,True,Low,Horizontal
+P_145,Administrative Block Foyer,Fee Counters,15.0,Corridor,True,Medium,Horizontal
+P_146,Fee Counters,Central Library,10.0,Corridor,True,Medium,Horizontal
+P_147,Central Library,Smritimaya mLAC Museum,8.0,Corridor,True,Low,Horizontal
+P_148,Smritimaya mLAC Museum,Main Reception Staircase,12.0,Corridor,True,Low,Horizontal
+P_149,Classroom G8,Dept. of Psychology,8.0,Corridor,True,Low,Horizontal
+P_150,Dept. of Psychology,Classroom G9,6.0,Corridor,True,Low,Horizontal
+P_151,Classroom G11,"Dept. of English, Hindi & Sanskrit",8.0,Corridor,True,Low,Horizontal
+P_152,Canteen Area,Health Centre,14.0,Paved Walkway,True,Low,Horizontal
+P_153,Health Centre,Gents Washroom,12.0,Paved Walkway,True,Low,Horizontal
+P_154,Gents Washroom,mLAC Garden,15.0,Paved Walkway,True,Low,Horizontal
+P_155,mLAC Garden,College Garden Walkway,10.0,Paved Walkway,True,Low,Horizontal
+P_156,Classroom PG T1,Library (PG),6.0,Corridor,True,Low,Horizontal
+P_157,Library (PG),Classroom PG T2 & T3,8.0,Corridor,True,Low,Horizontal
+P_158,Classroom PG T2 & T3,Campus Central Elevator (Floor 3),10.0,Corridor,True,Low,Horizontal
+P_159,Third Floor Lecture Hall,mLAC - KSCST - IP Cell (PG T7),10.0,Corridor,True,Low,Horizontal
+P_160,mLAC - KSCST - IP Cell (PG T7),Classroom PG T5 & T6,8.0,Corridor,True,Low,Horizontal
+P_161,Classroom PG T5 & T6,1 KAR Air SQN NCC & NCC Store,8.0,Corridor,True,Low,Horizontal
+P_162,Main Reception Staircase (Floor 3),Classroom PG T8,6.0,Corridor,True,Low,Horizontal
+P_163,Classroom PG T8,Business Lab,8.0,Corridor,True,Low,Horizontal
+P_164,DBT-Bioinformatics Facility,Third Floor Lecture Hall,12.0,Corridor,True,Low,Horizontal
+P_165,1 KAR Air SQN NCC & NCC Store,Student Open Lounge (Third Floor Level),8.0,Stairs,False,Low,Vertical
+P_166,Student Open Lounge (Third Floor Level),Girls Wash Room (Student Lounge),6.0,Hall,True,Low,Horizontal
+P_167,Student Open Lounge (Third Floor Level),Green Room (Student Lounge),8.0,Hall,True,Low,Horizontal
+P_168,Classroom S12,Student Open Lounge (Third Floor Level),12.0,Stairs,False,Low,Vertical
+P_169,Life Science Research Centre,Biotechnology Research Lab,6.0,Corridor,True,Low,Horizontal
+P_170,Biotechnology Research Lab,Classroom PG T1,6.0,Corridor,True,Low,Horizontal
+P_171,Dept. of Commerce & Management (BBA),Dept. of Computer Science & Staff Room,12.0,Corridor,True,Low,Horizontal
+P_172,Main Reception Staircase,Classroom G11,18.0,Quadrangle Pathway,True,Low,Horizontal
+P_173,Main Reception Staircase,IQAC (Internal Quality Assurance Cell),10.0,Corridor,True,Low,Horizontal
+P_174,IQAC (Internal Quality Assurance Cell),Classroom S12,8.0,Corridor,True,Low,Horizontal

@@ -1,0 +1,18 @@
+metric_category,metric_name,metric_value,unit,details
+Traffic,Total Daily Wayfinding Searches,1842,queries,Across campus kiosks and mobile devices
+Traffic,Peak Hour Traffic (11:00 AM - 12:00 PM),412,queries/hour,Class transition and recess period
+Popular_Destinations,Central Library,342,visits,Highest visited resource center
+Popular_Destinations,Computer Lab 1 & 2,298,visits,Peak lab practicals timing
+Popular_Destinations,Canteen,285,visits,Lunch hour influx
+Popular_Destinations,Sanskrit Department & Classrooms,145,visits,Specialized language study block
+Popular_Destinations,Principal Office & Admin,168,visits,New student and parent inquiries
+Language_Distribution,English,54,percent,Standard instruction language
+Language_Distribution,Kannada,32,percent,High regional adoption & native comfort
+Language_Distribution,Hindi,14,percent,National language queries
+Accessibility,Wheelchair Route Requests,12.4,percent,Barrier-free ramp and lift paths selected
+Accessibility,Elevator Utilization Rate,84.6,percent,Peak between Ground and Floor 2
+Congestion_Hotspots,Block B Central Corridor,High,risk,Pre-lab rush between 10 AM and 11 AM
+Congestion_Hotspots,Block A Ground Foyer,Medium,risk,Library and quadrangle crossing
+Congestion_Hotspots,Block C Canteen Walkway,High,risk,12:30 PM to 01:30 PM lunch break
+System_Performance,Average Dijkstra Path Compute Time,4.2,milliseconds,High-speed NetworkX in-memory graph
+System_Performance,Graph Reachability Coverage,100,percent,Zero disconnected nodes across all floors

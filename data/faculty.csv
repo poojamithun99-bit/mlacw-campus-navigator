@@ -1,0 +1,9 @@
+faculty_id,full_name,designation,department_id,cabin_room,location_id,email,consultation_hours
+FAC_201,Dr. S. V. Manjula,Professor & Head,DEPT_01,Dept. of Computer Science & Staff Room,LOC_075,manjula.sv@mlacw.edu.in,10:00 AM - 12:00 PM
+FAC_202,Prof. R. Geetha,Associate Professor,DEPT_02,Computer Lab 2,LOC_077,geetha.r@mlacw.edu.in,02:00 PM - 04:00 PM
+FAC_203,Dr. N. Gayathri,Professor,DEPT_03,Mathematics Department,LOC_067,gayathri.n@mlacw.edu.in,11:00 AM - 01:00 PM
+FAC_204,Dr. B. K. Sharada,Head of Department,DEPT_04,Dept. of Physics (UG) & Faculty Chamber,LOC_047,sharada.bk@mlacw.edu.in,09:30 AM - 11:30 AM
+FAC_205,Dr. P. Pushpalatha,Associate Professor,DEPT_05,Dept. of Chemistry & Staff Room,LOC_052,pushpalatha.p@mlacw.edu.in,01:30 PM - 03:30 PM
+FAC_206,Dr. Rekha Sethi,Associate Professor,DEPT_16,Dept. of Botany,LOC_039,rekha.sethi@mlacw.edu.in,10:00 AM - 12:00 PM
+FAC_207,Dr. H. S. Champa,Professor & Head,DEPT_17,Dept. of Life Sciences Staff Room,LOC_058,champa.hs@mlacw.edu.in,02:00 PM - 04:00 PM
+FAC_208,Dr. Shashikala A,Principal,DEPT_15,Principal Office,LOC_004,principal@mlacw.edu.in,11:00 AM - 01:00 PM

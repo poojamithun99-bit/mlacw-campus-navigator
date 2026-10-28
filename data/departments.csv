@@ -1,0 +1,19 @@
+department_id,department_name,kannada_name,hindi_name,block,floor,location_id,hod_name,contact_email,phone_ext
+DEPT_01,Computer Science,ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್,कंप्यूटर साइंस,East Wing,2,LOC_075,Dr. S. V. Manjula,cs.hod@mlacw.edu.in,2101
+DEPT_02,Information Science,ಮಾಹಿತಿ ವಿಜ್ಞಾನ,सूचना विज्ञान,East Wing,2,LOC_077,Prof. R. Geetha,is.dept@mlacw.edu.in,2102
+DEPT_03,Mathematics,ಗಣಿತಶಾಸ್ತ್ರ,गणित,West Wing,2,LOC_067,Dr. N. Gayathri,maths.hod@mlacw.edu.in,2103
+DEPT_04,Physics,ಭೌತಶಾಸ್ತ್ರ,भौतिकी,South Wing,1,LOC_047,Dr. B. K. Sharada,physics.dept@mlacw.edu.in,2201
+DEPT_05,Chemistry,ರಸಾಯನಶಾಸ್ತ್ರ,रसायन विज्ञान,East Wing,1,LOC_052,Dr. P. Pushpalatha,chem.dept@mlacw.edu.in,2202
+DEPT_06,Biotechnology,ಜೈವಿಕ ತಂತ್ರಜ್ಞಾನ,बायोटेक्नोलॉजी,West Wing,3,LOC_091,Dr. K. S. Anuradha,biotech.dept@mlacw.edu.in,2301
+DEPT_07,Microbiology,ಸೂಕ್ಷ್ಮಜೀವವಿಜ್ಞಾನ,माइक्रोबायोलॉजी,West Wing,3,LOC_092,Dr. S. Bhavani,microbio.dept@mlacw.edu.in,2302
+DEPT_08,Commerce,ವಾಣಿಜ್ಯ,वाणिज्य,PG Commerce Wing,3,LOC_099,Dr. M. Lalitha,commerce.hod@mlacw.edu.in,2401
+DEPT_09,Management (BBA),ವ್ಯವಹಾರ ನಿರ್ವಹಣೆ,प्रबंधन,East Wing,2,LOC_080,Prof. Deepa Kamath,bba.hod@mlacw.edu.in,2402
+DEPT_10,English,ಇಂಗ್ಲಿಷ್,अंग्रेजी,South Lecture Wing,0,LOC_114,Dr. Anitha Rao,english.dept@mlacw.edu.in,2501
+DEPT_11,Kannada,ಕನ್ನಡ,कन्नड़,West Wing,2,LOC_066,Dr. T. S. Ramesh,kannada.dept@mlacw.edu.in,2502
+DEPT_12,Sanskrit,ಸಂಸ್ಕೃತ,संस्कृत,South Lecture Wing,0,LOC_114,Dr. Vidwan Vidyashankar,sanskrit.dept@mlacw.edu.in,2503
+DEPT_13,Psychology,ಮನಃಶಾಸ್ತ್ರ,मनोविज्ञान,South Lecture Wing,0,LOC_113,Dr. Preethi Shenoy,psychology.dept@mlacw.edu.in,2601
+DEPT_14,Journalism,ಪತ್ರಿಕೋದ್ಯಮ,पत्रकारिता,West Wing,1,LOC_041,Prof. V. Sandhya,journalism.dept@mlacw.edu.in,2602
+DEPT_15,Administration,ಆಡಳಿತ,प्रशासन,Admin Block,0,LOC_003,Dr. Shashikala A (Principal),principal@mlacw.edu.in,2001
+DEPT_16,Botany,ಸಸ್ಯಶಾಸ್ತ್ರ,वनस्पति विज्ञान,North Wing,1,LOC_039,Dr. Rekha Sethi,botany.dept@mlacw.edu.in,2701
+DEPT_17,Zoology,ಪ್ರಾಣಿಶಾಸ್ತ್ರ,जंतु विज्ञान,East Wing,1,LOC_058,Dr. H. S. Champa,zoology.dept@mlacw.edu.in,2702
+DEPT_18,Biochemistry,ಬಯೋಕೆಮಿಸ್ಟ್ರಿ,जैव रसायन,East Wing,1,LOC_057,Dr. N. Vani,biochem.dept@mlacw.edu.in,2703

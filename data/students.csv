@@ -1,0 +1,13 @@
+student_id,roll_number,full_name,department_id,program,year_of_study,section,wheelchair_user,emergency_contact
+STU_1001,23BCAS01,Ananya Sharma,DEPT_01,BCA,2,A,false,+91-9845012341
+STU_1002,23BCAS02,Bhavana Gowda,DEPT_01,BCA,2,A,true,+91-9845012342
+STU_1003,24BSCS01,Chaitra Rao,DEPT_01,B.Sc Computer Science,1,B,false,+91-9845012343
+STU_1004,22BCOM01,Divya Murthy,DEPT_08,B.Com,3,A,false,+91-9845012344
+STU_1005,23BBAS01,Farhana Taj,DEPT_09,BBA,2,A,false,+91-9845012345
+STU_1006,24BSCP01,Gowri K,DEPT_04,B.Sc Physics,1,A,false,+91-9845012346
+STU_1007,23BSCB01,Harshitha P,DEPT_06,B.Sc Biotechnology,2,A,true,+91-9845012347
+STU_1008,22BASK01,Janaki Shastri,DEPT_12,BA Sanskrit,3,A,false,+91-9845012348
+STU_1009,24BAPSY1,Keerthana Hegde,DEPT_13,BA Psychology,1,A,false,+91-9845012349
+STU_1010,23BAJOU1,Lavanya N,DEPT_14,BA Journalism,2,A,false,+91-9845012350
+STU_1011,24BCOM12,Monika S,DEPT_08,B.Com,1,C,false,+91-9845012351
+STU_1012,23BSCM01,Nandini Bhat,DEPT_03,B.Sc Mathematics,2,A,false,+91-9845012352
