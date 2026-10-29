@@ -2,7 +2,7 @@
 Pedestrian Turn-by-Turn Natural Language Generation (NLG) Engine
 Translates mathematical graph node sequences into natural, human-readable directives.
 Provides progressive checkpoint guidance, bilateral landmark orientation cues,
-automatic corridor and multi-floor compression, 180-degree disorientation recovery,
+automatic corridor and multi-floor compression, natural disorientation recovery,
 distance cues, and walking ETAs.
 """
 
@@ -32,46 +32,46 @@ class CampusNLGEngine:
                 if language == "Kannada":
                     return {
                         "landmark": "ರಿಸೆಪ್ಷನ್ ಕೌಂಟರ್ ಮತ್ತು ಗಣೇಶ ವಿಗ್ರಹ",
-                        "cue": "ರಿಸೆಪ್ಷನ್ ಕೌಂಟರ್ ಎದುರಿಗಿರುವ ಮುಖ್ಯ ಸ್ವಾಗತ ಮೆಟ್ಟಿಲಿನ ಮುಂದೆ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಮುಖ್ಯ ದ್ವಾರವು ನಿಮ್ಮ ಹಿಂಭಾಗದಲ್ಲಿರಬೇಕು ಮತ್ತು ಗಣೇಶ ವಿಗ್ರಹವಿರುವ ರಿಸೆಪ್ಷನ್ ಕೌಂಟರ್ ನೇರವಾಗಿ ಎದುರಿಗೆ ಇರಬೇಕು. ಪ್ರವೇಶ ದ್ವಾರವು ಮುಂದೆ ಕಂಡರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                        "cue": "ರಿಸೆಪ್ಷನ್ ಕೌಂಟರ್ ಎದುರಿಗಿರುವ ಮುಖ್ಯ ಸ್ವಾಗತ ಮೆಟ್ಟಿಲಿನ ಮುಂದೆ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಮುಖ್ಯ ದ್ವಾರವು ನಿಮ್ಮ ಹಿಂಭಾಗದಲ್ಲಿರಬೇಕು ಮತ್ತು ಗಣೇಶ ವಿಗ್ರಹವಿರುವ ರಿಸೆಪ್ಷನ್ ಕೌಂಟರ್ ನೇರವಾಗಿ ಎದುರಿಗೆ ಇರಬೇಕು. ಪ್ರವೇಶ ದ್ವಾರವು ಮುಂದೆ ಕಂಡರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                     }
                 elif language == "Hindi":
                     return {
                         "landmark": "रिसेप्शन काउंटर और गणेश प्रतिमा",
-                        "cue": "रिसेप्शन काउंटर के ठीक सामने मुख्य स्वागत सीढ़ियों के पास रुकें। सत्यापन: मुख्य द्वार आपके पीछे होना चाहिए और गणेश प्रतिमा वाला रिसेप्शन काउंटर ठीक सामने होना चाहिए। यदि प्रवेश द्वार आगे दिखे, तो 180 डिग्री पीछे मुड़ें।"
+                        "cue": "रिसेप्शन काउंटर के ठीक सामने मुख्य स्वागत सीढ़ियों के पास रुकें। सत्यापन: मुख्य द्वार आपके पीछे होना चाहिए और गणेश प्रतिमा वाला रिसेप्शन काउंटर ठीक सामने होना चाहिए। यदि प्रवेश द्वार आगे दिखे, तो पीछे मुड़ें।"
                     }
                 return {
                     "landmark": "Main Reception Desk & Ganesha Idol",
-                    "cue": "Stop before the Main Reception Staircase directly opposite the reception desk. Check: The main entrance gate should be behind you and the reception counter with Ganesha idol directly ahead. If the entrance gate is ahead of you, turn around 180 degrees."
+                    "cue": "Stop before the Main Reception Staircase directly opposite the reception desk. Check: The main entrance gate should be behind you and the reception counter with Ganesha idol directly ahead. If the entrance gate is ahead of you, simply turn around."
                 }
             elif to_node == "College Garden Walkway":
                 if language == "Kannada":
                     return {
                         "landmark": "ಉದ್ಯಾನವನ ಮಾರ್ಗ (Garden Walkway)",
-                        "cue": "ಉದ್ಯಾನವನ ಮಾರ್ಗದ ಪ್ರಾರಂಭದಲ್ಲಿ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಹಸಿರು ಉದ್ಯಾನವನದ ಹಾದಿಯು ನಿಮ್ಮ ಬಲಭಾಗದಲ್ಲಿರಬೇಕು ಮತ್ತು ಮುಖ್ಯ ಕಟ್ಟಡ ಎಡಭಾಗದಲ್ಲಿರಬೇಕು. ವಿರುದ್ಧವಾಗಿದ್ದರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                        "cue": "ಉದ್ಯಾನವನ ಮಾರ್ಗದ ಪ್ರಾರಂಭದಲ್ಲಿ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಹಸಿರು ಉದ್ಯಾನವನದ ಹಾದಿಯು ನಿಮ್ಮ ಬಲಭಾಗದಲ್ಲಿರಬೇಕು ಮತ್ತು ಮುಖ್ಯ ಕಟ್ಟಡ ಎಡಭಾಗದಲ್ಲಿರಬೇಕು. ವಿರುದ್ಧವಾಗಿದ್ದರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                     }
                 elif language == "Hindi":
                     return {
                         "landmark": "कॉलेज गार्डन वॉकवे",
-                        "cue": "गार्डन प्रोमेनेड के मोड़ पर रुकें। सत्यापन: हरा-भरा गार्डन वॉकवे आपकी दाईं ओर और मुख्य इमारत बाईं ओर होनी चाहिए। यदि यह विपरीत है, तो 180 डिग्री पीछे मुड़ें।"
+                        "cue": "गार्डन प्रोमेनेड के मोड़ पर रुकें। सत्यापन: हरा-भरा गार्डन वॉकवे आपकी दाईं ओर और मुख्य इमारत बाईं ओर होनी चाहिए। यदि यह विपरीत है, तो पीछे मुड़ें।"
                     }
                 return {
                     "landmark": "Lush College Garden Walkway",
-                    "cue": "Stop at the start of the garden promenade. Check: The green garden walkway should be on your right hand side and the main building on your left. If the garden is on your left, turn around 180 degrees."
+                    "cue": "Stop at the start of the garden promenade. Check: The green garden walkway should be on your right hand side and the main building on your left. If the garden is on your left, simply turn around."
                 }
             elif to_node == "Administrative Block Foyer":
                 if language == "Kannada":
                     return {
                         "landmark": "ಸಂಸ್ಥಾಪಕ ಡಾ. ಎಂ.ಸಿ. ಶಾಸ್ತ್ರಿ ಅವರ ಪ್ರತಿಮೆ",
-                        "cue": "ಮುಖಮಂಟಪದಲ್ಲಿರುವ ಸಂಸ್ಥಾಪಕರ ಪ್ರತಿಮೆಯ ಬಳಿ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಸಂಸ್ಥಾಪಕ ಡಾ. ಎಂ.ಸಿ. ಶಾಸ್ತ್ರಿ ಅವರ ಪ್ರತಿಮೆ ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲೂ, ರಿಸೆಪ್ಷನ್ ಡೆಸ್ಕ್ ನೇರವಾಗಿ ಮುಂದಿರಬೇಕು. ಭದ್ರತಾ ದ್ವಾರವು ಮುಂದೆ ಕಂಡರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                        "cue": "ಮುಖಮಂಟಪದಲ್ಲಿರುವ ಸಂಸ್ಥಾಪಕರ ಪ್ರತಿಮೆಯ ಬಳಿ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಸಂಸ್ಥಾಪಕ ಡಾ. ಎಂ.ಸಿ. ಶಾಸ್ತ್ರಿ ಅವರ ಪ್ರತಿಮೆ ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲೂ, ರಿಸೆಪ್ಷನ್ ಡೆಸ್ಕ್ ನೇರವಾಗಿ ಮುಂದಿರಬೇಕು. ಭದ್ರತಾ ದ್ವಾರವು ಮುಂದೆ ಕಂಡರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                     }
                 elif language == "Hindi":
                     return {
                         "landmark": "संस्थापक डॉ. एम.सी. शास्त्री की प्रतिमा",
-                        "cue": "फ़ोयर में संस्थापक की प्रतिमा के पास रुकें। सत्यापन: संस्थापक डॉ. एम.सी. शास्त्री की प्रतिमा आपकी बाईं ओर और मुख्य रिसेप्शन डेस्क सीधे आगे होनी चाहिए। यदि सुरक्षा द्वार आगे दिखे, तो 180 डिग्री पीछे मुड़ें।"
+                        "cue": "फ़ोयर में संस्थापक की प्रतिमा के पास रुकें। सत्यापन: संस्थापक डॉ. एम.सी. शास्त्री की प्रतिमा आपकी बाईं ओर और मुख्य रिसेप्शन डेस्क सीधे आगे होनी चाहिए। यदि सुरक्षा द्वार आगे दिखे, तो पीछे मुड़ें।"
                     }
                 return {
                     "landmark": "Security Check Post & Founder's Bust",
-                    "cue": "Stop at the founder's memorial bust inside the foyer. Check: Founder Director Dr. M. C. Sastri's bust should be on your left hand side and the main reception desk directly ahead. If the security gate is ahead, turn around 180 degrees."
+                    "cue": "Stop at the founder's memorial bust inside the foyer. Check: Founder Director Dr. M. C. Sastri's bust should be on your left hand side and the main reception desk directly ahead. If the security gate is ahead, simply turn around."
                 }
 
         # 2. Administrative Foyer Turns
@@ -80,31 +80,31 @@ class CampusNLGEngine:
                 if language == "Kannada":
                     return {
                         "landmark": "ರಿಸೆಪ್ಷನ್ ಕೌಂಟರ್ ಮತ್ತು ಗಣೇಶ ವಿಗ್ರಹ",
-                        "cue": "ರಿಸೆಪ್ಷನ್ ಎದುರಿನ ಮೆಟ್ಟಿಲಿನ ಮುಂದೆ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಗಣೇಶ ವಿಗ್ರಹವಿರುವ ಆಡಳಿತ ರಿಸೆಪ್ಷನ್ ಕೌಂಟರ್ ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲೂ, ಮೆಟ್ಟಿಲು ನೇರವಾಗಿ ಮುಂದಿರಬೇಕು. ಹೊರಗಿನ ಉದ್ಯಾನವನ ಕಂಡರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                        "cue": "ರಿಸೆಪ್ಷನ್ ಎದುರಿನ ಮೆಟ್ಟಿಲಿನ ಮುಂದೆ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಗಣೇಶ ವಿಗ್ರಹವಿರುವ ಆಡಳಿತ ರಿಸೆಪ್ಷನ್ ಕೌಂಟರ್ ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲೂ, ಮೆಟ್ಟಿಲು ನೇರವಾಗಿ ಮುಂದಿರಬೇಕು. ಹೊರಗಿನ ಉದ್ಯಾನವನ ಕಂಡರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                     }
                 elif language == "Hindi":
                     return {
                         "landmark": "रिसेप्शन काउंटर और गणेश प्रतिमा",
-                        "cue": "रिसेप्शन के सामने सीढ़ियों के पास रुकें। सत्यापन: गणेश प्रतिमा वाला प्रशासनिक रिसेप्शन काउंटर आपकी बाईं ओर और सीढ़ियाँ ठीक आगे होनी चाहिए। यदि बगीचा दिखे, तो 180 डिग्री पीछे मुड़ें।"
+                        "cue": "रिसेप्शन के सामने सीढ़ियों के पास रुकें। सत्यापन: गणेश प्रतिमा वाला प्रशासनिक रिसेप्शन काउंटर आपकी बाईं ओर और सीढ़ियाँ ठीक आगे होनी चाहिए। यदि बगीचा दिखे, तो पीछे मुड़ें।"
                     }
                 return {
                     "landmark": "Main Reception Counter & Ganesha Idol",
-                    "cue": "Stop before the staircase opposite the reception desk. Check: The administrative reception desk with Ganesha idol should be directly on your left and the staircase directly ahead. If the outdoor garden is ahead, turn around 180 degrees."
+                    "cue": "Stop before the staircase opposite the reception desk. Check: The administrative reception desk with Ganesha idol should be directly on your left and the staircase directly ahead. If the outdoor garden is ahead, simply turn around."
                 }
             elif "Classroom G" in to_node or to_node == "PU College Stairs":
                 if language == "Kannada":
                     return {
                         "landmark": "ಸುವರ್ಣ ಮಹೋತ್ಸವ ಸಭಾಂಗಣ (Golden Jubilee Hall)",
-                        "cue": "ಸುವರ್ಣ ಮಹೋತ್ಸವ ಸಭಾಂಗಣದ ಪ್ರವೇಶದ್ವಾರದ ಬಳಿ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಸಂಸ್ಥಾಪಕರ ಪ್ರತಿಮೆ ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲೂ, ಆಡಳಿತ ಕಚೇರಿ ಬಲಭಾಗದಲ್ಲೂ ಇರಬೇಕು. ಕಚೇರಿ ಎಡಭಾಗದಲ್ಲಿದ್ದರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                        "cue": "ಸುವರ್ಣ ಮಹೋತ್ಸವ ಸಭಾಂಗಣದ ಪ್ರವೇಶದ್ವಾರದ ಬಳಿ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಸಂಸ್ಥಾಪಕರ ಪ್ರತಿಮೆ ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲೂ, ಆಡಳಿತ ಕಚೇರಿ ಬಲಭಾಗದಲ್ಲೂ ಇರಬೇಕು. ಕಚೇರಿ ಎಡಭಾಗದಲ್ಲಿದ್ದರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                     }
                 elif language == "Hindi":
                     return {
                         "landmark": "स्वर्ण जयंती संगोष्ठी हॉल (Golden Jubilee Hall)",
-                        "cue": "स्वर्ण जयंती सेमिनार हॉल के प्रवेश द्वार पर रुकें। सत्यापन: संस्थापक की प्रतिमा बाईं ओर और प्रशासनिक कार्यालय दाईं ओर होना चाहिए। यदि कार्यालय बाईं ओर है, तो 180 डिग्री पीछे मुड़ें।"
+                        "cue": "स्वर्ण जयंती सेमिनार हॉल के प्रवेश द्वार पर रुकें। सत्यापन: संस्थापक की प्रतिमा बाईं ओर और प्रशासनिक कार्यालय दाईं ओर होना चाहिए। यदि कार्यालय बाईं ओर है, तो पीछे मुड़ें।"
                     }
                 return {
                     "landmark": "Golden Jubilee Seminar Hall & Founder's Bust",
-                    "cue": "Stop at the entrance of Golden Jubilee Seminar Hall. Check: The Founder's bust should be on your left hand side and Administrative Office on your right. If the office is on your left, turn around 180 degrees."
+                    "cue": "Stop at the entrance of Golden Jubilee Seminar Hall. Check: The Founder's bust should be on your left hand side and Administrative Office on your right. If the office is on your left, simply turn around."
                 }
 
         # 3. Ground Floor Quadrangle Shortcut (Reception <-> Classroom G11)
@@ -114,31 +114,31 @@ class CampusNLGEngine:
                 if language == "Kannada":
                     return {
                         "landmark": "ತರಗತಿ ಜಿ ೧೧ ನಾಮಫಲಕ ಮತ್ತು ತೆರೆದ ಅಂಗಳ",
-                        "cue": "ತರಗತಿ ಜಿ ೧೧ ರ ನಾಮಫಲಕ ಕಂಡಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ತರಗತಿ ಜಿ ೧೧ ಅಂಗಳದ ನಡಿಗೆ ಹಾದಿಯ ಬಲಭಾಗದಲ್ಲಿದೆ ಮತ್ತು ತೆರೆದ ಆಕಾಶದ ಅಂಗಳವು ನೇರವಾಗಿ ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲಿದೆ. ಅಂಗಳವು ಬಲಭಾಗದಲ್ಲಿದ್ದರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                        "cue": "ತರಗತಿ ಜಿ ೧೧ ರ ನಾಮಫಲಕ ಕಂಡಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ತರಗತಿ ಜಿ ೧೧ ಅಂಗಳದ ನಡಿಗೆ ಹಾದಿಯ ಬಲಭಾಗದಲ್ಲಿದೆ ಮತ್ತು ತೆರೆದ ಆಕಾಶದ ಅಂಗಳವು ನೇರವಾಗಿ ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲಿದೆ. ಅಂಗಳವು ಬಲಭಾಗದಲ್ಲಿದ್ದರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                     }
                 elif language == "Hindi":
                     return {
                         "landmark": "कक्षा जी 11 नेमप्लेट और खुला आंगन",
-                        "cue": "कक्षा जी 11 का नेमप्लेट दिखने पर रुकें। सत्यापन: क्लासरूम G11 प्रांगण के रास्ते पर आपकी दाईं ओर स्थित है और खुला आंगन ठीक आपकी बाईं ओर है। यदि आंगन दाईं ओर है, तो 180 डिग्री पीछे मुड़ें।"
+                        "cue": "कक्षा जी 11 का नेमप्लेट दिखने पर रुकें। सत्यापन: क्लासरूम G11 प्रांगण के रास्ते पर आपकी दाईं ओर स्थित है और खुला आंगन ठीक आपकी बाईं ओर है। यदि आंगन दाईं ओर है, तो पीछे मुड़ें।"
                     }
                 return {
                     "landmark": "Classroom G11 Plaque & Open-Sky Quadrangle",
-                    "cue": "Stop when you see the Classroom G11 door plaque. Check: Classroom G11 is located on your right along the courtyard walkway, and the open-sky courtyard is directly on your left. If the courtyard is on your right, turn around 180 degrees."
+                    "cue": "Stop when you see the Classroom G11 door plaque. Check: Classroom G11 is located on your right along the courtyard walkway, and the open-sky courtyard is directly on your left. If the courtyard is on your right, simply turn around."
                 }
             else:
                 if language == "Kannada":
                     return {
                         "landmark": "ಮುಖ್ಯ ರಿಸೆಪ್ಷನ್ ಡೆಸ್ಕ್ ಮತ್ತು ಗಣೇಶ ವಿಗ್ರಹ",
-                        "cue": "ಮುಖ್ಯ ರಿಸೆಪ್ಷನ್ ಡೆಸ್ಕ್‌ನ ಮುಂದೆ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ರಿಸೆಪ್ಷನ್ ಕೌಂಟರ್ ನಿಮ್ಮ ಎದುರಿಗಿರಬೇಕು ಮತ್ತು ಗಣೇಶ ವಿಗ್ರಹ ಕಾಣಿಸಬೇಕು. ವಿರುದ್ಧವಾಗಿದ್ದರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                        "cue": "ಮುಖ್ಯ ರಿಸೆಪ್ಷನ್ ಡೆಸ್ಕ್‌ನ ಮುಂದೆ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ರಿಸೆಪ್ಷನ್ ಕೌಂಟರ್ ನಿಮ್ಮ ಎದುರಿಗಿರಬೇಕು ಮತ್ತು ಗಣೇಶ ವಿಗ್ರಹ ಕಾಣಿಸಬೇಕು. ವಿರುದ್ಧವಾಗಿದ್ದರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                     }
                 elif language == "Hindi":
                     return {
                         "landmark": "मुख्य रिसेप्शन डेस्क और गणेश प्रतिमा",
-                        "cue": "मुख्य रिसेप्शन डेस्क के सामने रुकें। सत्यापन: रिसेप्शन काउंटर ठीक सामने होना चाहिए और गणेश प्रतिमा दिखनी चाहिए। यदि विपरीत है, तो 180 डिग्री पीछे मुड़ें।"
+                        "cue": "मुख्य रिसेप्शन डेस्क के सामने रुकें। सत्यापन: रिसेप्शन काउंटर ठीक सामने होना चाहिए और गणेश प्रतिमा दिखनी चाहिए। यदि विपरीत है, तो पीछे मुड़ें।"
                     }
                 return {
                     "landmark": "Main Reception Desk & Ganesha Idol",
-                    "cue": "Stop at the Main Reception desk. Check: The reception counter with Ganesha idol should be directly ahead and the main entrance gate beyond it. If the courtyard is in front of you, turn around 180 degrees."
+                    "cue": "Stop at the Main Reception desk. Check: The reception counter with Ganesha idol should be directly ahead and the main entrance gate beyond it. If the courtyard is in front of you, simply turn around."
                 }
 
         # 4. Ground Floor Classroom Corridor (G1 to G11)
@@ -146,16 +146,16 @@ class CampusNLGEngine:
             if language == "Kannada":
                 return {
                     "landmark": "ತರಗತಿಗಳ ಕಾರಿಡಾರ್ ಮತ್ತು ಆವರಣದ ಕಿಟಕಿಗಳು",
-                    "cue": f"{to_node} ರ ನಾಮಫಲಕ ಕಂಡಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಕಾರಿಡಾರ್‌ನಲ್ಲಿ ನಡೆಯುವಾಗ ತರಗತಿ ಕೊಠಡಿಗಳು ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲೂ, ಮುಕ್ತ ಆವರಣದ ಕಿಟಕಿಗಳು ಬಲಭಾಗದಲ್ಲೂ ಇರಬೇಕು. ಕಿಟಕಿಗಳು ಎಡಭಾಗದಲ್ಲಿದ್ದರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                    "cue": f"{to_node} ರ ನಾಮಫಲಕ ಕಂಡಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಕಾರಿಡಾರ್‌ನಲ್ಲಿ ನಡೆಯುವಾಗ ತರಗತಿ ಕೊಠಡಿಗಳು ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲೂ, ಮುಕ್ತ ಆವರಣದ ಕಿಟಕಿಗಳು ಬಲಭಾಗದಲ್ಲೂ ಇರಬೇಕು. ಕಿಟಕಿಗಳು ಎಡಭಾಗದಲ್ಲಿದ್ದರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                 }
             elif language == "Hindi":
                 return {
                     "landmark": "क्लासरूम कॉरिडोर और प्रांगण की खिड़कियां",
-                    "cue": f"{to_node} का नेमप्लेट दिखने पर रुकें। सत्यापन: गलियारे में चलते समय क्लासरूम आपकी बाईं ओर और आंगन की खिड़कियां दाईं ओर होनी चाहिए। यदि खिड़कियां बाईं ओर हैं, तो 180 डिग्री पीछे मुड़ें।"
+                    "cue": f"{to_node} का नेमप्लेट दिखने पर रुकें। सत्यापन: गलियारे में चलते समय क्लासरूम आपकी बाईं ओर और आंगन की खिड़कियां दाईं ओर होनी चाहिए। यदि खिड़कियां बाईं ओर हैं, तो पीछे मुड़ें।"
                 }
             return {
                 "landmark": "Classroom Wing Corridor & Courtyard Windows",
-                "cue": f"Stop when you see the door plaque for {to_node}. Check: Classrooms should be on your left hand side and the open courtyard windows on your right. If classrooms are on your right, you are heading back toward reception — turn around 180 degrees."
+                "cue": f"Stop when you see the door plaque for {to_node}. Check: Classrooms should be on your left hand side and the open courtyard windows on your right. If classrooms are on your right, you are heading back toward reception — simply turn around."
             }
 
         # 5. Vertical Transitions (Stairs & Elevator)
@@ -164,31 +164,31 @@ class CampusNLGEngine:
                 if language == "Kannada":
                     return {
                         "landmark": "ಮುಖ್ಯ ಸ್ವಾಗತ ಮೆಟ್ಟಿಲು ಲ್ಯಾಂಡಿಂಗ್",
-                        "cue": f"ಮಹಡಿ {to_floor} ರ ಮೇಲ್ಭಾಗದ ಲ್ಯಾಂಡಿಂಗ್‌ನಲ್ಲಿ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ನೆಲಮಹಡಿಯ ರಿಸೆಪ್ಷನ್ ಡೆಸ್ಕ್ ನಿಮ್ಮ ಹಿಂಭಾಗದಲ್ಲಿರಬೇಕು ಮತ್ತು ಮಹಡಿ {to_floor} ರ ಕಾರಿಡಾರ್ ಎದುರಿಗೆ ತೆರೆಯುತ್ತದೆ. ಮುಖ್ಯ ದ್ವಾರ ಕಂಡರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                        "cue": f"ಮಹಡಿ {to_floor} ರ ಮೇಲ್ಭಾಗದ ಲ್ಯಾಂಡಿಂಗ್‌ನಲ್ಲಿ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ನೆಲಮಹಡಿಯ ರಿಸೆಪ್ಷನ್ ಡೆಸ್ಕ್ ನಿಮ್ಮ ಹಿಂಭಾಗದಲ್ಲಿರಬೇಕು ಮತ್ತು ಮಹಡಿ {to_floor} ರ ಕಾರಿಡಾರ್ ಎದುರಿಗೆ ತೆರೆಯುತ್ತದೆ. ಮುಖ್ಯ ದ್ವಾರ ಕಂಡರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                     }
                 elif language == "Hindi":
                     return {
                         "landmark": "मुख्य स्वागत सीढ़ी लैंडिंग",
-                        "cue": f"मंजिल {to_floor} की ऊपरी लैंडिंग पर रुकें। सत्यापन: भूतल का रिसेप्शन डेस्क आपके ठीक पीछे और नीचे होना चाहिए और मंजिल {to_floor} का गलियारा सामने खुलता है। यदि मुख्य द्वार दिखे, तो 180 डिग्री पीछे मुड़ें।"
+                        "cue": f"मंजिल {to_floor} की ऊपरी लैंडिंग पर रुकें। सत्यापन: भूतल का रिसेप्शन डेस्क आपके ठीक पीछे और नीचे होना चाहिए और मंजिल {to_floor} का गलियारा सामने खुलता है। यदि मुख्य द्वार दिखे, तो पीछे मुड़ें।"
                     }
                 return {
                     "landmark": "Main Reception Staircase Landing & Railing",
-                    "cue": f"Stop at the top landing of Floor {to_floor}. Check: The ground-floor reception desk is directly behind and below you, and the Floor {to_floor} hallway opens immediately ahead. If you see the ground floor garden, turn around 180 degrees."
+                    "cue": f"Stop at the top landing of Floor {to_floor}. Check: The ground-floor reception desk is directly behind and below you, and the Floor {to_floor} hallway opens immediately ahead. If you see the ground floor garden, simply turn around."
                 }
             else:
                 if language == "Kannada":
                     return {
                         "landmark": f"ಮಹಡಿ {to_floor} ರ ಕಾರಿಡಾರ್ ಪ್ರವೇಶ",
-                        "cue": f"ಮಹಡಿ {to_floor} ರ ಲ್ಯಾಂಡಿಂಗ್ ತಲುಪಿದ ತಕ್ಷಣ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಗೋಡೆಯ ಮೇಲಿನ 'ಮಹಡಿ {to_floor}' ಫಲಕವನ್ನು ನೋಡಿ ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ. ಕಾರಿಡಾರ್ ನೇರವಾಗಿ ಎದುರಿಗೆ ಇರಬೇಕು. ತಪ್ಪಾದ ಮಹಡಿಯಲ್ಲಿದ್ದರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                        "cue": f"ಮಹಡಿ {to_floor} ರ ಲ್ಯಾಂಡಿಂಗ್ ತಲುಪಿದ ತಕ್ಷಣ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಗೋಡೆಯ ಮೇಲಿನ 'ಮಹಡಿ {to_floor}' ಫಲಕವನ್ನು ನೋಡಿ ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ. ಕಾರಿಡಾರ್ ನೇರವಾಗಿ ಎದುರಿಗೆ ಇರಬೇಕು. ತಪ್ಪಾದ ಮಹಡಿಯಲ್ಲಿದ್ದರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                     }
                 elif language == "Hindi":
                     return {
                         "landmark": f"मंजिल {to_floor} कॉरिडोर प्रवेश",
-                        "cue": f"मंजिल {to_floor} की लैंडिंग पर कदम रखते ही रुकें। सत्यापन: दीवार पर लगे 'मंजिल {to_floor}' साइन बोर्ड को देखकर पुष्टि करें। गलियारा ठीक सामने होना चाहिए। यदि गलत मंजिल पर हैं, तो 180 डिग्री पीछे मुड़ें।"
+                        "cue": f"मंजिल {to_floor} की लैंडिंग पर कदम रखते ही रुकें। सत्यापन: दीवार पर लगे 'मंजिल {to_floor}' साइन बोर्ड को देखकर पुष्टि करें। गलियारा ठीक सामने होना चाहिए। यदि गलत मंजिल पर हैं, तो पीछे मुड़ें।"
                     }
                 return {
                     "landmark": f"Floor {to_floor} Corridor Landing",
-                    "cue": f"Stop upon stepping onto the Floor {to_floor} landing. Check: Confirm Floor {to_floor} by reading the prominent floor level sign on the wall opposite the stairs/lift. If you are on the wrong floor, turn around 180 degrees."
+                    "cue": f"Stop upon stepping onto the Floor {to_floor} landing. Check: Confirm Floor {to_floor} by reading the prominent floor level sign on the wall opposite the stairs/lift. If you are on the wrong floor, simply turn around."
                 }
 
         # 6. First Floor Corridor & Labs
@@ -197,31 +197,31 @@ class CampusNLGEngine:
                 if language == "Kannada":
                     return {
                         "landmark": "ಪತ್ರಿಕೋದ್ಯಮ ವಿಭಾಗ (Dept. of Journalism)",
-                        "cue": "ವಿಭಾಗಗಳ ಬಾಗಿಲುಗಳ ನಡುವೆ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಸಸ್ಯಶಾಸ್ತ್ರ (Botany) ಕೊಠಡಿಯು ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲೂ, ಪತ್ರಿಕೋದ್ಯಮ ವಿಭಾಗ (Journalism) ಬಲಭಾಗದಲ್ಲೂ ಇರಬೇಕು. ಪತ್ರಿಕೋದ್ಯಮ ಎಡಭಾಗದಲ್ಲಿದ್ದರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                        "cue": "ವಿಭಾಗಗಳ ಬಾಗಿಲುಗಳ ನಡುವೆ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಸಸ್ಯಶಾಸ್ತ್ರ (Botany) ಕೊಠಡಿಯು ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲೂ, ಪತ್ರಿಕೋದ್ಯಮ ವಿಭಾಗ (Journalism) ಬಲಭಾಗದಲ್ಲೂ ಇರಬೇಕು. ಪತ್ರಿಕೋದ್ಯಮ ಎಡಭಾಗದಲ್ಲಿದ್ದರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                     }
                 elif language == "Hindi":
                     return {
                         "landmark": "पत्रकारिता विभाग (Dept. of Journalism)",
-                        "cue": "विभाग के दरवाजों के बीच रुकें। सत्यापन: वनस्पति विज्ञान (Botany) बाईं ओर और पत्रकारिता विभाग दाईं ओर होना चाहिए। यदि पत्रकारिता विभाग बाईं ओर है, तो 180 डिग्री पीछे मुड़ें।"
+                        "cue": "विभाग के दरवाजों के बीच रुकें। सत्यापन: वनस्पति विज्ञान (Botany) बाईं ओर और पत्रकारिता विभाग दाईं ओर होना चाहिए। यदि पत्रकारिता विभाग बाईं ओर है, तो पीछे मुड़ें।"
                     }
                 return {
                     "landmark": "Dept. of Botany & Dept. of Journalism",
-                    "cue": "Stop between the department doors. Check: The Department of Botany should be on your left hand side and Department of Journalism on your right. If Journalism is on your left, turn around 180 degrees."
+                    "cue": "Stop between the department doors. Check: The Department of Botany should be on your left hand side and Department of Journalism on your right. If Journalism is on your left, simply turn around."
                 }
             elif "Physics" in to_node:
                 if language == "Kannada":
                     return {
                         "landmark": "ಭೌತಶಾಸ್ತ್ರ ಲ್ಯಾಬ್‌ಗಳ ನೀಲಿ ನಾಮಫಲಕಗಳು",
-                        "cue": "ನೀಲಿ ದ್ವಿಭಾಷಾ ಫಲಕಗಳು ಕಂಡಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಭೌತಶಾಸ್ತ್ರ ಪ್ರಯೋಗಾಲಯಗಳು ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲಿ ನೀಲಿ ಫಲಕಗಳೊಂದಿಗೆ ಇರಬೇಕು. ಅವು ಬಲಭಾಗದಲ್ಲಿದ್ದರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                        "cue": "ನೀಲಿ ದ್ವಿಭಾಷಾ ಫಲಕಗಳು ಕಂಡಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಭೌತಶಾಸ್ತ್ರ ಪ್ರಯೋಗಾಲಯಗಳು ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲಿ ನೀಲಿ ಫಲಕಗಳೊಂದಿಗೆ ಇರಬೇಕು. ಅವು ಬಲಭಾಗದಲ್ಲಿದ್ದರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                     }
                 elif language == "Hindi":
                     return {
                         "landmark": "भौतिकी लैब के नीले नेमप्लेट",
-                        "cue": "नीले द्विभाषी बोर्ड दिखने पर रुकें। सत्यापन: भौतिक विज्ञान प्रयोगशालाएं आपकी बाईं ओर नीले बोर्ड के साथ होनी चाहिए। यदि वे दाईं ओर हैं, तो 180 डिग्री पीछे मुड़ें।"
+                        "cue": "नीले द्विभाषी बोर्ड दिखने पर रुकें। सत्यापन: भौतिक विज्ञान प्रयोगशालाएं आपकी बाईं ओर नीले बोर्ड के साथ होनी चाहिए। यदि वे दाईं ओर हैं, तो पीछे मुड़ें।"
                     }
                 return {
                     "landmark": "Physics Labs & Blue Overhead Nameplates",
-                    "cue": "Stop when you see the blue bilingual nameplates. Check: Physics Labs I and II should be on your left hand side. If they are on your right, turn around 180 degrees."
+                    "cue": "Stop when you see the blue bilingual nameplates. Check: Physics Labs I and II should be on your left hand side. If they are on your right, simply turn around."
                 }
 
         # 7. Second Floor (Library, CS Department, BBA, Classrooms S1-S12)
@@ -230,61 +230,61 @@ class CampusNLGEngine:
                 if language == "Kannada":
                     return {
                         "landmark": "ವಾಣಿಜ್ಯ ಮತ್ತು ನಿರ್ವಹಣಾ ವಿಭಾಗ (ಬಿಬಿಎ) ನಾಮಫಲಕ",
-                        "cue": "ವಾಣಿಜ್ಯ ಮತ್ತು ನಿರ್ವಹಣಾ ವಿಭಾಗ (ಬಿಬಿಎ) ನಾಮಫಲಕ ಕಂಡಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಬಿಬಿಎ ವಿಭಾಗದ ಪ್ರವೇಶದ್ವಾರವು ನೇರವಾಗಿ ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲಿರಬೇಕು. ಮೆಟ್ಟಿಲುಗಳು ಎದುರಿಗೆ ಕಂಡರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                        "cue": "ವಾಣಿಜ್ಯ ಮತ್ತು ನಿರ್ವಹಣಾ ವಿಭಾಗ (ಬಿಬಿಎ) ನಾಮಫಲಕ ಕಂಡಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಬಿಬಿಎ ವಿಭಾಗದ ಪ್ರವೇಶದ್ವಾರವು ನೇರವಾಗಿ ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲಿರಬೇಕು. ಮೆಟ್ಟಿಲುಗಳು ಎದುರಿಗೆ ಕಂಡರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                     }
                 elif language == "Hindi":
                     return {
                         "landmark": "वाणिज्य एवं प्रबंधन विभाग (BBA) नेमप्लेट",
-                        "cue": "वाणिज्य एवं प्रबंधन विभाग (BBA) के नेमप्लेट पर रुकें। सत्यापन: BBA विभाग का प्रवेश द्वार ठीक आपकी बाईं ओर होना चाहिए। यदि सीढ़ियाँ ठीक सामने दिखें, तो 180 डिग्री पीछे मुड़ें।"
+                        "cue": "वाणिज्य एवं प्रबंधन विभाग (BBA) के नेमप्लेट पर रुकें। सत्यापन: BBA विभाग का प्रवेश द्वार ठीक आपकी बाईं ओर होना चाहिए। यदि सीढ़ियाँ ठीक सामने दिखें, तो पीछे मुड़ें।"
                     }
                 return {
                     "landmark": "Dept. of Commerce & Management (BBA) Plaque",
-                    "cue": "Stop when you see the Department of Commerce & Management (BBA) overhead nameplate. Check: The BBA Department entrance should be directly on your left hand side. If the stairs are directly in front of you, turn around 180 degrees."
+                    "cue": "Stop when you see the Department of Commerce & Management (BBA) overhead nameplate. Check: The BBA Department entrance should be directly on your left hand side. If the stairs are directly in front of you, simply turn around."
                 }
             elif "Computer" in to_node or "CS" in to_node:
                 if language == "Kannada":
                     return {
                         "landmark": "ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್ ವಿಭಾಗ ಮತ್ತು ಸಿಬ್ಬಂದಿ ಕೊಠಡಿಯ ನೀಲಿ ನಾಮಫಲಕ",
-                        "cue": "ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್ ವಿಭಾಗ ಮತ್ತು ಸಿಬ್ಬಂದಿ ಕೊಠಡಿಯ ನೀಲಿ ಫಲಕ ಕಂಡಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್ ವಿಭಾಗ ಮತ್ತು ಕಂಪ್ಯೂಟರ್ ಲ್ಯಾಬ್‌ಗಳು ನೇರವಾಗಿ ನಿಮ್ಮ ಬಲಭಾಗದಲ್ಲಿರಬೇಕು. ಬಿಬಿಎ ವಿಭಾಗವು ಎದುರಿಗೆ ಕಂಡರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                        "cue": "ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್ ವಿಭಾಗ ಮತ್ತು ಸಿಬ್ಬಂದಿ ಕೊಠಡಿಯ ನೀಲಿ ಫಲಕ ಕಂಡಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್ ವಿಭಾಗ ಮತ್ತು ಕಂಪ್ಯೂಟರ್ ಲ್ಯಾಬ್‌ಗಳು ನೇರವಾಗಿ ನಿಮ್ಮ ಬಲಭಾಗದಲ್ಲಿರಬೇಕು. ಬಿಬಿಎ ವಿಭಾಗವು ಎದುರಿಗೆ ಕಂಡರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                     }
                 elif language == "Hindi":
                     return {
                         "landmark": "कंप्यूटर विज्ञान विभाग और स्टाफ रूम का नीला बोर्ड",
-                        "cue": "कंप्यूटर विज्ञान विभाग और स्टाफ रूम के नीले बोर्ड के पास रुकें। सत्यापन: कंप्यूटर साइंस विभाग और कंप्यूटर लैब ठीक आपकी दाईं ओर होने चाहिए। यदि BBA विभाग सामने दिखे, तो 180 डिग्री पीछे मुड़ें।"
+                        "cue": "कंप्यूटर विज्ञान विभाग और स्टाफ रूम के नीले बोर्ड के पास रुकें। सत्यापन: कंप्यूटर साइंस विभाग और कंप्यूटर लैब ठीक आपकी दाईं ओर होने चाहिए। यदि BBA विभाग सामने दिखे, तो पीछे मुड़ें।"
                     }
                 return {
                     "landmark": "Computer Science Department & Computer Lab 1 Blue Plaque",
-                    "cue": "Stop when you see the blue bilingual plaque for the Department of Computer Science & Staff Room. Check: The Computer Science Department and Computer Labs should be directly on your right hand side. If the BBA department is in front of you, turn around 180 degrees."
+                    "cue": "Stop when you see the blue bilingual plaque for the Department of Computer Science & Staff Room. Check: The Computer Science Department and Computer Labs should be directly on your right hand side. If the BBA department is in front of you, simply turn around."
                 }
             elif "Library" in to_node:
                 if language == "Kannada":
                     return {
                         "landmark": "ಸೆಂಟ್ರಲ್ ಲೈಬ್ರರಿಯ ಗಾಜಿನ ಮುಖ್ಯ ದ್ವಾರ",
-                        "cue": "ಗಾಜಿನ ಬಾಗಿಲುಗಳ ಮುಂದೆ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಸೆಂಟ್ರಲ್ ಲೈಬ್ರರಿಯ ಗಾಜಿನ ಪ್ರವೇಶದ್ವಾರವು ನಿಮ್ಮ ಬಲಭಾಗದಲ್ಲೂ, ತೆರೆದ ಅಂಗಳದ ಕಟಾಂಜನವು ಎಡಭಾಗದಲ್ಲೂ ಇರಬೇಕು. ವಿರುದ್ಧವಾಗಿದ್ದರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                        "cue": "ಗಾಜಿನ ಬಾಗಿಲುಗಳ ಮುಂದೆ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ಸೆಂಟ್ರಲ್ ಲೈಬ್ರರಿಯ ಗಾಜಿನ ಪ್ರವೇಶದ್ವಾರವು ನಿಮ್ಮ ಬಲಭಾಗದಲ್ಲೂ, ತೆರೆದ ಅಂಗಳದ ಕಟಾಂಜನವು ಎಡಭಾಗದಲ್ಲೂ ಇರಬೇಕು. ವಿರುದ್ಧವಾಗಿದ್ದರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                     }
                 elif language == "Hindi":
                     return {
                         "landmark": "सेंट्रल लाइब्रेरी का ग्लास गेट",
-                        "cue": "कांच के दरवाजों के सामने रुकें। सत्यापन: सेंट्रल लाइब्रेरी का कांच का मुख्य प्रवेश द्वार आपकी दाईं ओर और आंगन की रेलिंग बाईं ओर होनी चाहिए। यदि रेलिंग दाईं ओर है, तो 180 डिग्री पीछे मुड़ें।"
+                        "cue": "कांच के दरवाजों के सामने रुकें। सत्यापन: सेंट्रल लाइब्रेरी का कांच का मुख्य प्रवेश द्वार आपकी दाईं ओर और आंगन की रेलिंग बाईं ओर होनी चाहिए। यदि रेलिंग दाईं ओर है, तो पीछे मुड़ें।"
                     }
                 return {
                     "landmark": "Central Library Glass Entrance & Turnstiles",
-                    "cue": "Stop before the double glass doors. Check: The Central Library glass entrance should be on your right hand side and the quadrangle balcony railing on your left. If the railing is on your right, turn around 180 degrees."
+                    "cue": "Stop before the double glass doors. Check: The Central Library glass entrance should be on your right hand side and the quadrangle balcony railing on your left. If the railing is on your right, simply turn around."
                 }
             elif "Classroom S" in to_node:
                 if language == "Kannada":
                     return {
                         "landmark": "ಎರಡನೇ ಮಹಡಿ ತರಗತಿ ಕಾರಿಡಾರ್ (S1-S12)",
-                        "cue": f"{to_node} ರ ನಾಮಫಲಕ ಕಂಡಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ತರಗತಿ ಕೊಠಡಿಗಳು ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲೂ, ತೆರೆದ ಅಂಗಳದ ಬಾಲ್ಕನಿ ಕಟಾಂಜನವು ಬಲಭಾಗದಲ್ಲೂ ಇರಬೇಕು. ಲೈಬ್ರರಿ ಎದುರಿಗೆ ಕಂಡರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                        "cue": f"{to_node} ರ ನಾಮಫಲಕ ಕಂಡಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ತರಗತಿ ಕೊಠಡಿಗಳು ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲೂ, ತೆರೆದ ಅಂಗಳದ ಬಾಲ್ಕನಿ ಕಟಾಂಜನವು ಬಲಭಾಗದಲ್ಲೂ ಇರಬೇಕು. ಲೈಬ್ರರಿ ಎದುರಿಗೆ ಕಂಡರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                     }
                 elif language == "Hindi":
                     return {
                         "landmark": "दूसरी मंजिल क्लासरूम कॉरिडोर (S1-S12)",
-                        "cue": f"{to_node} का नेमप्लेट दिखने पर रुकें। सत्यापन: क्लासरूम आपकी बाईं ओर और खुले आंगन की बालकनी की रेलिंग दाईं ओर होनी चाहिए। यदि लाइब्रेरी सामने दिखे, तो 180 डिग्री पीछे मुड़ें।"
+                        "cue": f"{to_node} का नेमप्लेट दिखने पर रुकें। सत्यापन: क्लासरूम आपकी बाईं ओर और खुले आंगन की बालकनी की रेलिंग दाईं ओर होनी चाहिए। यदि लाइब्रेरी सामने दिखे, तो पीछे मुड़ें।"
                     }
                 return {
                     "landmark": "Second Floor Classroom Corridor & Balcony",
-                    "cue": f"Stop when you see the door plaque for {to_node}. Check: Classrooms should be on your left hand side and the open courtyard balcony railing on your right. If the library entrance is in front of you, turn around 180 degrees."
+                    "cue": f"Stop when you see the door plaque for {to_node}. Check: Classrooms should be on your left hand side and the open courtyard balcony railing on your right. If the library entrance is in front of you, simply turn around."
                 }
 
         # 8. Third Floor (Student Lounge & Lecture Hall)
@@ -292,32 +292,32 @@ class CampusNLGEngine:
             if language == "Kannada":
                 return {
                     "landmark": "ಮೂರನೇ ಮಹಡಿಯ ವಿದ್ಯಾರ್ಥಿ ಲೌಂಜ್ (Student Lounge)",
-                    "cue": "ಮರದ ಪಟ್ಟೆಗಳ ನೆಲಹಾಸಿನ ಮೇಲೆ ಹೆಜ್ಜೆಯಿಟ್ಟಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ತೆರೆದ ಟೆರೇಸ್ ಲೌಂಜ್ ಆಸನಗಳು ನೇರವಾಗಿ ಎದುರಿಗಿರಬೇಕು, ಕಪ್ಪು ಕಟಾಂಜನ ಬಲಭಾಗದಲ್ಲೂ, ಲೆಕ್ಚರ್ ಹಾಲ್ ೩ ಎಡಭಾಗದಲ್ಲೂ ಇರಬೇಕು. ಮೆಟ್ಟಿಲು ಹಿಂಭಾಗದಲ್ಲಿರಬೇಕು. ಮೆಟ್ಟಿಲು ಮುಂದೆ ಕಂಡರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                    "cue": "ಮರದ ಪಟ್ಟೆಗಳ ನೆಲಹಾಸಿನ ಮೇಲೆ ಹೆಜ್ಜೆಯಿಟ್ಟಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: ತೆರೆದ ಟೆರೇಸ್ ಲೌಂಜ್ ಆಸನಗಳು ನೇರವಾಗಿ ಎದುರಿಗಿರಬೇಕು, ಕಪ್ಪು ಕಟಾಂಜನ ಬಲಭಾಗದಲ್ಲೂ, ಲೆಕ್ಚರ್ ಹಾಲ್ ೩ ಎಡಭಾಗದಲ್ಲೂ ಇರಬೇಕು. ಮೆಟ್ಟಿಲು ಹಿಂಭಾಗದಲ್ಲಿರಬೇಕು. ಮೆಟ್ಟಿಲು ಮುಂದೆ ಕಂಡರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
                 }
             elif language == "Hindi":
                 return {
                     "landmark": "ओपन स्टूडेंट लाउंज (तीसरी मंजिल)",
-                    "cue": "लकड़ी की धारीदार फर्श पर कदम रखते ही रुकें। सत्यापन: ओपन टेरेस लाउंज सिटिंग ठीक सामने होनी चाहिए, काली रेलिंग दाईं ओर और लेक्चर हॉल 3 बाईं ओर होना चाहिए। सीढ़ियाँ ठीक पीछे होनी चाहिए। यदि सीढ़ियाँ आगे दिखें, तो 180 डिग्री पीछे मुड़ें।"
+                    "cue": "लकड़ी की धारीदार फर्श पर कदम रखते ही रुकें। सत्यापन: ओपन टेरेस लाउंज सिटिंग ठीक सामने होनी चाहिए, काली रेलिंग दाईं ओर और लेक्चर हॉल 3 बाईं ओर होना चाहिए। सीढ़ियाँ ठीक पीछे होनी चाहिए। यदि सीढ़ियाँ आगे दिखें, तो पीछे मुड़ें।"
                 }
             return {
                 "landmark": "Student Open Terrace Lounge & Terrace Railing",
-                "cue": "Stop when you step onto the wooden striped flooring. Check: The open terrace student lounge seating should be directly ahead with black railings on your right and Lecture Hall 3 on your left. The staircase should be directly behind you. If the stairs are ahead, turn around 180 degrees."
+                "cue": "Stop when you step onto the wooden striped flooring. Check: The open terrace student lounge seating should be directly ahead with black railings on your right and Lecture Hall 3 on your left. The staircase should be directly behind you. If the stairs are ahead, simply turn around."
             }
 
         # Dynamic Generic Fallback for Landmark Verification
         if language == "Kannada":
             return {
                 "landmark": to_node,
-                "cue": f"{to_node} ನಾಮಫಲಕ ಕಂಡಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: {to_node} ನೇರವಾಗಿ ನಿಮ್ಮ ಪಕ್ಕದಲ್ಲಿರಬೇಕು. ಹತ್ತಿರದ ಫಲಕವನ್ನು ನೋಡಿ ದೃಢಪಡಿಸಿಕೊಳ್ಳಿ. ಅದು ಹಿಂಭಾಗದಲ್ಲಿದ್ದರೆ, 180 ಡಿಗ್ರಿ ಹಿಂದಿರುಗಿ."
+                "cue": f"{to_node} ನಾಮಫಲಕ ಕಂಡಾಗ ನಿಲ್ಲಿ. ದೃಢೀಕರಣ: {to_node} ನೇರವಾಗಿ ನಿಮ್ಮ ಪಕ್ಕದಲ್ಲಿರಬೇಕು. ಹತ್ತಿರದ ಫಲಕವನ್ನು ನೋಡಿ ದೃಢಪಡಿಸಿಕೊಳ್ಳಿ. ಅದು ಹಿಂಭಾಗದಲ್ಲಿದ್ದರೆ, ಹಿಂದಕ್ಕೆ ತಿರುಗಿ."
             }
         elif language == "Hindi":
             return {
                 "landmark": to_node,
-                "cue": f"{to_node} का नेमप्लेट दिखने पर रुकें। सत्यापन: {to_node} ठीक आपके पास होना चाहिए। निकटतम साइन बोर्ड देखकर पुष्टि करें। यदि यह पीछे है, तो 180 डिग्री पीछे मुड़ें।"
+                "cue": f"{to_node} का नेमप्लेट दिखने पर रुकें। सत्यापन: {to_node} ठीक आपके पास होना चाहिए। निकटतम साइन बोर्ड देखकर पुष्टि करें। यदि यह पीछे है, तो पीछे मुड़ें।"
             }
         return {
             "landmark": to_node,
-            "cue": f"Stop when you see the door plaque for {to_node}. Check: {to_node} should be directly beside you. Confirm by checking the nearest door plaque or sign board. If it is behind you, turn around 180 degrees."
+            "cue": f"Stop when you see the door plaque for {to_node}. Check: {to_node} should be directly beside you. Confirm by checking the nearest door plaque or sign board. If it is behind you, simply turn around."
         }
 
     def _compress_path_segments(self, path: List[str], graph) -> List[Dict[str, Any]]:

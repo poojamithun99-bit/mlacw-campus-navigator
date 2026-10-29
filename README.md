@@ -45,8 +45,9 @@ The application is structured into clean, modular, and maintainable components:
 6. **`nlg_engine.py`** — Turn-by-Turn Natural Language Generation providing human-readable walking directions, physical landmarks, and visual verification cues.
 7. **`map_component.py`** — Interactive 2D Leaflet campus floor maps with multi-floor toggle and live route rendering.
 8. **`voice_audio_component.py`** — Speech-to-Text and Text-to-Speech audio assistant with mic permission handling and playback controls.
-9. **`schemas.py`** — Pydantic models and coordinate validation rules.
-10. **`test_system.py`** — Automated 7-stage end-to-end verification test suite.
+9. **`svg_icons.py`** — High-resolution vector SVG icon system providing platform-independent icons for all UI cards, rails, and badges.
+10. **`schemas.py`** — Pydantic models and coordinate validation rules.
+11. **`test_system.py`** — Automated 7-stage end-to-end verification test suite.
 
 ---
 

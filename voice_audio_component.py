@@ -14,6 +14,7 @@ Features:
 """
 
 import json
+from svg_icons import get_svg_icon
 
 def get_voice_assistant_html(
     language: str = "English",
@@ -38,44 +39,55 @@ def get_voice_assistant_html(
     escaped_audio = json.dumps(audio_script)
     auto_play_js = "true" if auto_play else "false"
 
+    # Crisp Vector SVG Icons
+    icon_mic = get_svg_icon("mic", size=14, color="currentColor")
+    icon_play = get_svg_icon("play", size=13, color="currentColor", filled=True)
+    icon_pause = get_svg_icon("pause", size=13, color="currentColor", filled=True)
+    icon_stop = get_svg_icon("stop", size=13, color="currentColor", filled=True)
+    icon_next = get_svg_icon("arrow_right", size=12, color="currentColor")
+    icon_repeat = get_svg_icon("repeat", size=12, color="currentColor")
+    icon_back = get_svg_icon("skip_back", size=12, color="currentColor", filled=True)
+    icon_lost = get_svg_icon("lifebuoy", size=13, color="#DC2626")
+    icon_globe = get_svg_icon("globe", size=13, color="#0369A1")
+
     panel_i18n = {
         "English": {
             "badge": f"Step {checkpoint_num}/{total_checkpoints}",
-            "mic": "🎙️ Voice Command",
-            "play": "▶ Speak Step",
-            "pause": "⏸ Pause",
-            "stop": "⏹ Stop",
+            "mic": f"{icon_mic}<span>Voice Command</span>",
+            "play": f"{icon_play}<span>Speak Step</span>",
+            "pause": f"{icon_pause}<span>Pause</span>",
+            "stop": f"{icon_stop}<span>Stop</span>",
             "quick": "Quick:",
-            "btn_next": "Next ➔",
-            "btn_repeat": "Repeat 🔄",
-            "btn_back": "⏮ Back",
-            "btn_lost": "🆘 Lost",
+            "btn_next": f"<span>Next</span>{icon_next}",
+            "btn_repeat": f"{icon_repeat}<span>Repeat</span>",
+            "btn_back": f"{icon_back}<span>Back</span>",
+            "btn_lost": f"{icon_lost}<span>Lost</span>",
             "status": "Voice assistant active &bull; Tap <b>\"Speak Step\"</b> or say <b>\"Next\"</b>, <b>\"Repeat\"</b>, or <b>\"Lost\"</b>"
         },
         "Kannada": {
             "badge": f"ಹಂತ {checkpoint_num}/{total_checkpoints}",
-            "mic": "🎙️ ಧ್ವನಿ ಆದೇಶ",
-            "play": "▶ ಹಂತ ಕೇಳಿ",
-            "pause": "⏸ ವಿರಾಮ",
-            "stop": "⏹ ನಿಲ್ಲಿಸಿ",
+            "mic": f"{icon_mic}<span>ಧ್ವನಿ ಆದೇಶ</span>",
+            "play": f"{icon_play}<span>ಹಂತ ಕೇಳಿ</span>",
+            "pause": f"{icon_pause}<span>ವಿರಾಮ</span>",
+            "stop": f"{icon_stop}<span>ನಿಲ್ಲಿಸಿ</span>",
             "quick": "ತ್ವರಿತ:",
-            "btn_next": "ಮುಂದೆ ➔",
-            "btn_repeat": "ಮತ್ತೊಮ್ಮೆ 🔄",
-            "btn_back": "⏮ ಹಿಂದೆ",
-            "btn_lost": "🆘 ದಾರಿ ತಪ್ಪಿದೆ",
+            "btn_next": f"<span>ಮುಂದೆ</span>{icon_next}",
+            "btn_repeat": f"{icon_repeat}<span>ಮತ್ತೊಮ್ಮೆ</span>",
+            "btn_back": f"{icon_back}<span>ಹಿಂದೆ</span>",
+            "btn_lost": f"{icon_lost}<span>ದಾರಿ ತಪ್ಪಿದೆ</span>",
             "status": "ಧ್ವನಿ ಸಹಾಯಕ ಸಿದ್ಧವಾಗಿದೆ &bull; <b>\"ಹಂತ ಕೇಳಿ\"</b> ಕ್ಲಿಕ್ ಮಾಡಿ ಅಥವಾ <b>\"ಮುಂದೆ\"</b>, <b>\"ಮತ್ತೊಮ್ಮೆ\"</b> ಹೇಳಿ"
         },
         "Hindi": {
             "badge": f"कदम {checkpoint_num}/{total_checkpoints}",
-            "mic": "🎙️ वॉइस कमांड",
-            "play": "▶ निर्देश सुनें",
-            "pause": "⏸ विराम",
-            "stop": "⏹ रोकें",
+            "mic": f"{icon_mic}<span>वॉइस कमांड</span>",
+            "play": f"{icon_play}<span>निर्देश सुनें</span>",
+            "pause": f"{icon_pause}<span>विराम</span>",
+            "stop": f"{icon_stop}<span>रोकें</span>",
             "quick": "त्वरित:",
-            "btn_next": "आगे ➔",
-            "btn_repeat": "दोहराएं 🔄",
-            "btn_back": "⏮ पीछे",
-            "btn_lost": "🆘 भटक गया",
+            "btn_next": f"<span>आगे</span>{icon_next}",
+            "btn_repeat": f"{icon_repeat}<span>दोहराएं</span>",
+            "btn_back": f"{icon_back}<span>पीछे</span>",
+            "btn_lost": f"{icon_lost}<span>भटक गया</span>",
             "status": "वॉइस असिस्टेंट सक्रिय है &bull; <b>\"निर्देश सुनें\"</b> पर क्लिक करें या <b>\"आगे\"</b>, <b>\"दोहराएं\"</b> बोलें"
         }
     }
@@ -224,6 +236,9 @@ def get_voice_assistant_html(
                 border: 1px solid #CBD5E1;
                 transition: all 0.15s ease;
                 min-height: 28px;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
                 touch-action: manipulation;
             }}
             .btn-pill-cmd:hover {{
@@ -260,7 +275,7 @@ def get_voice_assistant_html(
     <body>
         <div class="voice-panel">
             <div class="lang-strip">
-                <span class="lang-strip-label">🌐 Voice Language:</span>
+                <span class="lang-strip-label" style="display:inline-flex; align-items:center; gap:5px;">{icon_globe} Voice Language:</span>
                 <button class="btn-lang {'active' if language=='English' else ''}" onclick="switchLanguage('English')" title="English Voice">English</button>
                 <button class="btn-lang {'active' if language=='Kannada' else ''}" onclick="switchLanguage('Kannada')" title="ಕನ್ನಡ ಧ್ವನಿ">ಕನ್ನಡ (Kannada)</button>
                 <button class="btn-lang {'active' if language=='Hindi' else ''}" onclick="switchLanguage('Hindi')" title="हिंदी आवाज">हिंदी (Hindi)</button>
