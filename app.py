@@ -460,10 +460,10 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
         </div>
         <div id="live-speech-box-{key_suffix}" style="margin-top:10px; background:#FFFFFF; border:1.5px dashed #F43F5E; border-radius:8px; padding:12px 14px; font-size:14px; color:#1E293B; min-height:48px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
             <div id="live-speech-text-{key_suffix}" style="font-style:normal; color:#0369A1; font-weight:600; flex:1 1 280px; line-height:1.4;">
-                🎙️ <b>Microphone ready:</b> Click <b>'Allow Mic & Speak'</b> to speak your destination.
+                🎙️ <b>Microphone ready:</b> Click <b>'Start Speaking'</b> to speak your destination.
             </div>
             <button id="btn-request-mic-{key_suffix}" type="button" style="background:linear-gradient(135deg, #E11D48 0%, #BE123C 100%); color:#FFFFFF; border:none; border-radius:6px; padding:8px 18px; font-weight:700; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(225,29,72,0.25); white-space:nowrap; transition:all 0.15s ease;">
-                🎙️ Allow Mic & Speak / ಮಾತನಾಡಿ
+                🎙️ Start Speaking / ಮಾತನಾಡಿ
             </button>
         </div>
     </div>
@@ -489,125 +489,129 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
         let recognition = null;
         let isListening = false;
 
-        function initRecognition() {{
-            if (recognition) {{
-                try {{ recognition.abort(); }} catch(e) {{}}
-            }}
-            recognition = new SpeechClass();
-            recognition.continuous = false;
-            recognition.interimResults = true;
-            recognition.lang = "{lang_code}";
-
-            recognition.onstart = function() {{
-                isListening = true;
-                updateStatus("🔴 <b>Microphone Active!</b> Speak now (e.g., 'Take me to Library', 'Classroom G11')...", "#BE123C");
-                if (permBtn) {{
-                    permBtn.innerHTML = "🔴 Listening... / ಆಲಿಸಲಾಗುತ್ತಿದೆ";
-                    permBtn.style.background = "#9F1239";
+        function startRecognition() {{
+            try {{
+                if (recognition) {{
+                    try {{ recognition.abort(); }} catch(e) {{}}
                 }}
-            }};
+                recognition = new SpeechClass();
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.lang = "{lang_code}";
 
-            recognition.onresult = function(event) {{
-                let interimTranscript = '';
-                let finalTranscript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {{
-                    if (event.results[i].isFinal) {{
-                        finalTranscript += event.results[i][0].transcript;
-                    }} else {{
-                        interimTranscript += event.results[i][0].transcript;
+                recognition.onstart = function() {{
+                    isListening = true;
+                    updateStatus("🔴 <b>Microphone Active!</b> Speak now (e.g., 'Take me to Library', 'Classroom G11')...", "#BE123C");
+                    if (permBtn) {{
+                        permBtn.innerHTML = "🔴 Listening... / ಆಲಿಸಲಾಗುತ್ತಿದೆ";
+                        permBtn.style.background = "#9F1239";
                     }}
-                }}
-                const heard = (finalTranscript || interimTranscript).trim();
-                if (heard) {{
-                    updateStatus("🗣️ <b>Heard:</b> \"" + heard + "\"... Processing query...", "#0F172A");
-                }}
-                if (finalTranscript.trim().length > 0) {{
-                    const finalQ = finalTranscript.trim();
-                    let submitted = false;
-                    try {{
-                        const inputEl = document.querySelector('.st-key-stage2_voice_input input, input[type="text"]');
-                        if (inputEl) {{
-                            inputEl.value = finalQ;
-                            inputEl.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                            inputEl.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                            const submitBtn = document.querySelector('.st-key-stage2_voice_submit_btn button');
-                            if (submitBtn) {{
-                                submitBtn.click();
-                                submitted = true;
-                            }}
+                }};
+
+                recognition.onresult = function(event) {{
+                    let interimTranscript = '';
+                    let finalTranscript = '';
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {{
+                        if (event.results[i].isFinal) {{
+                            finalTranscript += event.results[i][0].transcript;
+                        }} else {{
+                            interimTranscript += event.results[i][0].transcript;
                         }}
-                    }} catch(e) {{
-                        console.log("Input trigger error:", e);
                     }}
-                    if (!submitted) {{
+                    const heard = (finalTranscript || interimTranscript).trim();
+                    if (heard) {{
+                        updateStatus("🗣️ <b>Heard:</b> \"" + heard + "\"... Navigating...", "#0F172A");
+                    }}
+                    if (finalTranscript.trim().length > 0) {{
+                        const finalQ = finalTranscript.trim();
+                        updateStatus("✅ <b>Recognized:</b> \"" + finalQ + "\"... Opening route...", "#047857");
                         setTimeout(function() {{
-                            const q = encodeURIComponent(finalQ);
-                            window.location.search = '?voice_q=' + q;
-                        }}, 300);
+                            const enc = encodeURIComponent(finalQ);
+                            try {{
+                                if (window.parent && window.parent !== window && window.parent.location) {{
+                                    window.parent.location.search = '?voice_q=' + enc;
+                                    return;
+                                }}
+                            }} catch(e) {{}}
+                            window.location.search = '?voice_q=' + enc;
+                        }}, 250);
                     }}
-                }}
-            }};
+                }};
 
-            recognition.onerror = function(event) {{
-                console.warn("Speech recognition error:", event.error);
-                isListening = false;
-                if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {{
-                    updateStatus(
-                        "⚠️ <b>Microphone permission blocked:</b><br>" +
-                        "<span style='font-size:12px; font-weight:500; color:#991B1B; line-height:1.4; display:inline-block; margin-top:4px;'>" +
-                        "1. Click the lock 🔒 or settings icon in your browser address bar.<br>" +
-                        "2. Set <b>Microphone</b> to <b>'Allow'</b>.<br>" +
-                        "3. Click <b>'Retry Microphone'</b>, or tap any quick sample question below!</span>",
-                        "#B91C1C"
-                    );
-                    if (permBtn) {{
-                        permBtn.innerHTML = "🔄 Retry Microphone / ಪುನಃ ಪ್ರಯತ್ನಿಸಿ";
-                        permBtn.style.background = "#DC2626";
+                recognition.onerror = function(event) {{
+                    console.warn("Speech recognition error:", event.error);
+                    isListening = false;
+                    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {{
+                        updateStatus(
+                            "⚠️ <b>Microphone permission blocked:</b><br>" +
+                            "<span style='font-size:12px; font-weight:500; color:#991B1B; line-height:1.4; display:inline-block; margin-top:4px;'>" +
+                            "1. Click the lock 🔒 or settings icon in your browser address bar.<br>" +
+                            "2. Set <b>Microphone</b> to <b>'Allow'</b>.<br>" +
+                            "3. Click <b>'Start Speaking'</b> below, or tap any quick sample question!</span>",
+                            "#B91C1C"
+                        );
+                        if (permBtn) {{
+                            permBtn.innerHTML = "🎙️ Start Speaking / ಮಾತನಾಡಿ";
+                            permBtn.style.background = "#DC2626";
+                        }}
+                    }} else if (event.error === 'no-speech') {{
+                        updateStatus("⚠️ <b>No speech detected.</b> Click <b>'Speak Again'</b> and speak clearly into your mic.", "#B91C1C");
+                        if (permBtn) {{
+                            permBtn.innerHTML = "🎙️ Speak Again / ಪುನಃ ಮಾತನಾಡಿ";
+                            permBtn.style.background = "#BE123C";
+                        }}
+                    }} else {{
+                        updateStatus("⚠️ <b>Microphone note (" + event.error + "):</b> Tap button to try again, or use quick options below.", "#B91C1C");
+                        if (permBtn) {{
+                            permBtn.innerHTML = "🎙️ Try Again / ಪುನಃ ಪ್ರಯತ್ನಿಸಿ";
+                            permBtn.style.background = "#BE123C";
+                        }}
                     }}
-                }} else if (event.error === 'no-speech') {{
-                    updateStatus("⚠️ <b>No speech detected.</b> Click <b>'Speak Again'</b> and speak clearly into your mic.", "#B91C1C");
-                    if (permBtn) {{
-                        permBtn.innerHTML = "🎙️ Speak Again / ಪುನಃ ಮಾತನಾಡಿ";
-                        permBtn.style.background = "#BE123C";
-                    }}
-                }} else {{
-                    updateStatus("⚠️ <b>Microphone issue (" + event.error + "):</b> Click retry or use the quick buttons below.", "#B91C1C");
-                    if (permBtn) {{
-                        permBtn.innerHTML = "🔄 Retry / ಪುನಃ ಪ್ರಯತ್ನಿಸಿ";
-                        permBtn.style.background = "#BE123C";
-                    }}
-                }}
-            }};
+                }};
 
-            recognition.onend = function() {{
+                recognition.onend = function() {{
+                    isListening = false;
+                    if (permBtn) {{
+                        permBtn.innerHTML = "🎙️ Start Speaking / ಮಾತನಾಡಿ";
+                        permBtn.style.background = "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)";
+                    }}
+                }};
+
+                recognition.start();
+            }} catch(e) {{
+                console.error("SpeechRecognition start exception:", e);
                 isListening = false;
-                if (permBtn && permBtn.innerHTML.indexOf("Listening") !== -1) {{
-                    permBtn.innerHTML = "🎙️ Allow Mic & Speak / ಮಾತನಾಡಿ";
-                    permBtn.style.background = "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)";
-                }}
-            }};
+            }}
         }}
 
         function triggerMic() {{
             if (isListening) return;
             updateStatus("🎙️ <b>Requesting microphone access...</b> Please click <b>'Allow'</b> if prompted.", "#0369A1");
-            initRecognition();
 
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {{
                 navigator.mediaDevices.getUserMedia({{ audio: true }})
                     .then(function(stream) {{
-                        try {{ recognition.start(); }} catch(e) {{ console.log(e); }}
+                        // CRITICAL: Stop tracks immediately so audio hardware lock is released for recognition!
+                        try {{
+                            stream.getTracks().forEach(function(track) {{ track.stop(); }});
+                        }} catch(e) {{}}
+                        startRecognition();
                     }})
                     .catch(function(err) {{
                         console.warn("getUserMedia error:", err);
                         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {{
-                            if (recognition.onerror) recognition.onerror({{ error: 'not-allowed' }});
+                            updateStatus(
+                                "⚠️ <b>Microphone permission blocked:</b><br>" +
+                                "<span style='font-size:12px; font-weight:500; color:#991B1B;'>" +
+                                "Click the lock 🔒 icon in the address bar, set Microphone to <b>'Allow'</b>, and tap <b>'Start Speaking'</b> again.</span>",
+                                "#B91C1C"
+                            );
                         }} else {{
-                            try {{ recognition.start(); }} catch(e) {{ console.log(e); }}
+                            startRecognition();
                         }}
                     }});
             }} else {{
-                try {{ recognition.start(); }} catch(e) {{ console.log(e); }}
+                startRecognition();
             }}
         }}
 
@@ -617,13 +621,6 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
                 triggerMic();
             }};
         }}
-
-        setTimeout(function() {{
-            try {{
-                initRecognition();
-                recognition.start();
-            }} catch(e) {{}}
-        }}, 150);
     }})();
     </script>
     """, unsafe_allow_javascript=True)
