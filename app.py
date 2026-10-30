@@ -1597,53 +1597,221 @@ else:
     if st.session_state.get("voice_assistant_response"):
         v_ans_text, v_ans_lang, v_ans_audio = st.session_state.pop("voice_assistant_response")
         v_lang_code = {"Kannada": "kn-IN", "Hindi": "hi-IN", "English": "en-IN"}.get(v_ans_lang, "en-IN")
+        if not v_ans_audio:
+            v_ans_audio = generate_step_audio(v_ans_text, v_ans_lang)
+        b64_ans_audio = base64.b64encode(v_ans_audio).decode('ascii') if v_ans_audio else ""
         escaped_v_ans = json.dumps(v_ans_text)
-        has_audio_str = "true" if v_ans_audio else "false"
-        render_html(f"""
-        <div style="background:linear-gradient(135deg, #F0F9FF, #E0F2FE); border:2px solid #0284C7; border-radius:12px; padding:14px 18px; margin-bottom:16px; box-shadow:0 3px 10px rgba(2,132,199,0.12);">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="color:#0284C7;">{get_svg_icon('speaker', size=20, color='#0284C7')}</span>
-                    <span style="font-size:13px; font-weight:800; color:#0369A1; text-transform:uppercase;">
-                        Spoken Route Confirmation ({v_ans_lang})
-                    </span>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <button type="button" onclick="window.mlacwSpeakAns()" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 4px rgba(2,132,199,0.25);">
-                        {get_svg_icon('play', size=12, color='#FFFFFF', filled=True)}
-                        <span>Listen Aloud / ಧ್ವನಿ ಕೇಳಿ</span>
-                    </button>
-                    {icon_badge('speaker', 'Vocal Route Activated', bg='#FFFFFF', color='#0284C7', border='#BAE6FD', size=12)}
-                </div>
+
+        confirm_component_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta charset="utf-8">
+        <style>
+          * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }}
+          body {{ background: transparent; overflow: hidden; padding: 2px; }}
+          .confirm-card {{
+            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+            border: 1.8px solid #0284C7;
+            border-radius: 12px;
+            padding: 12px 16px;
+            box-shadow: 0 3px 10px rgba(2, 132, 199, 0.12);
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+          }}
+          .confirm-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+          }}
+          .title-group {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }}
+          .title-text {{
+            font-size: 12px;
+            font-weight: 800;
+            color: #0369A1;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }}
+          .badge-activated {{
+            font-size: 11px;
+            font-weight: 700;
+            color: #0284C7;
+            background: #FFFFFF;
+            border: 1px solid #BAE6FD;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+          }}
+          .actions-group {{
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          }}
+          .btn-audio-action {{
+            background: #0284C7;
+            color: #FFFFFF !important;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 1px 4px rgba(2, 132, 199, 0.25);
+            transition: all 0.15s ease;
+          }}
+          .btn-audio-action:hover {{ background: #0369A1; transform: translateY(-1px); }}
+          .btn-audio-action:active {{ transform: translateY(1px); }}
+          .btn-audio-action.playing {{ background: #D97706 !important; }}
+          .btn-stop-action {{
+            background: #FFFFFF;
+            color: #475569;
+            border: 1px solid #CBD5E1;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+          }}
+          .btn-stop-action:hover {{ background: #F1F5F9; color: #0F172A; }}
+          .quote-text {{
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0F172A;
+            line-height: 1.45;
+          }}
+        </style>
+        </head>
+        <body>
+          <div class="confirm-card">
+            <div class="confirm-header">
+              <div class="title-group">
+                <span style="color:#0284C7; font-size:15px;">🔊</span>
+                <span class="title-text">Spoken Route Confirmation ({v_ans_lang})</span>
+                <span class="badge-activated">✓ Vocal Route Activated</span>
+              </div>
+              <div class="actions-group">
+                <button type="button" class="btn-audio-action" id="btn-conf-play" onclick="toggleConfAudio()">
+                  <span id="conf-icon">▶</span>
+                  <span id="conf-label">Listen Aloud / ಧ್ವನಿ ಕೇಳಿ</span>
+                </button>
+                <button type="button" class="btn-stop-action" onclick="stopConfAudio()">
+                  <span>⏹</span> Stop
+                </button>
+              </div>
             </div>
-            <div style="font-size:15px; font-weight:700; color:#0F172A; line-height:1.5; margin-bottom:6px;">
-                "{v_ans_text}"
+            <div class="quote-text">
+              "{v_ans_text}"
             </div>
-        </div>
-        <script>
-        window.mlacwSpeakAns = function() {{
-            const synth = window.speechSynthesis;
-            if (!synth) return;
-            synth.cancel();
-            synth.resume();
-            const u = new SpeechSynthesisUtterance({escaped_v_ans});
-            u.lang = '{v_lang_code}';
-            u.rate = 0.95;
-            const voices = synth.getVoices() || [];
-            const prefix = '{v_lang_code}'.split('-')[0].toLowerCase();
-            const matched = voices.find(v => v.lang && (v.lang.toLowerCase() === '{v_lang_code}'.toLowerCase() || v.lang.toLowerCase().startsWith(prefix)));
-            if (matched) u.voice = matched;
-            synth.speak(u);
-        }};
-        if (!{has_audio_str}) {{
+          </div>
+
+          <script>
+            const b64Data = "{b64_ans_audio}";
+            const textToSpeak = {escaped_v_ans};
+            const langCode = "{v_lang_code}";
+            let audioObj = null;
+            let isPlaying = false;
+
+            if (b64Data && b64Data.length > 50) {{
+              try {{
+                audioObj = new Audio("data:audio/mp3;base64," + b64Data);
+                audioObj.onended = () => resetConfUI();
+                audioObj.onerror = () => audioObj = null;
+              }} catch(e) {{ audioObj = null; }}
+            }}
+
+            function resetConfUI() {{
+              isPlaying = false;
+              const btn = document.getElementById("btn-conf-play");
+              const icon = document.getElementById("conf-icon");
+              const label = document.getElementById("conf-label");
+              if (btn) btn.classList.remove("playing");
+              if (icon) icon.innerText = "▶";
+              if (label) label.innerText = "Listen Aloud / ಧ್ವನಿ ಕೇಳಿ";
+            }}
+
+            function toggleConfAudio() {{
+              if (isPlaying) {{
+                stopConfAudio();
+                return;
+              }}
+              playConfAudio();
+            }}
+
+            function playConfAudio() {{
+              stopConfAudio();
+              isPlaying = true;
+              const btn = document.getElementById("btn-conf-play");
+              const icon = document.getElementById("conf-icon");
+              const label = document.getElementById("conf-label");
+              if (btn) btn.classList.add("playing");
+              if (icon) icon.innerText = "⏸";
+              if (label) label.innerText = "Pause / ವಿರಾಮ";
+
+              if (audioObj) {{
+                audioObj.currentTime = 0;
+                audioObj.play().catch(e => {{
+                  fallbackConfSpeech();
+                }});
+              }} else {{
+                fallbackConfSpeech();
+              }}
+            }}
+
+            function fallbackConfSpeech() {{
+              if (!window.speechSynthesis) return;
+              try {{
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.resume();
+                const u = new SpeechSynthesisUtterance(textToSpeak);
+                u.lang = langCode;
+                u.rate = 0.95;
+                const voices = window.speechSynthesis.getVoices() || [];
+                const prefix = langCode.split('-')[0].toLowerCase();
+                const match = voices.find(v => v.lang && (v.lang.toLowerCase() === langCode.toLowerCase() || v.lang.toLowerCase().startsWith(prefix)));
+                if (match) u.voice = match;
+                u.onend = () => resetConfUI();
+                u.onerror = () => resetConfUI();
+                window.speechSynthesis.speak(u);
+              }} catch(err) {{
+                resetConfUI();
+              }}
+            }}
+
+            function stopConfAudio() {{
+              if (audioObj) {{
+                try {{ audioObj.pause(); audioObj.currentTime = 0; }} catch(e) {{}}
+              }}
+              if (window.speechSynthesis) {{
+                try {{ window.speechSynthesis.cancel(); }} catch(e) {{}}
+              }}
+              resetConfUI();
+            }}
+
+            // Auto-play immediately on load
             setTimeout(() => {{
-                try {{ window.mlacwSpeakAns(); }} catch(e) {{}}
+              playConfAudio();
             }}, 200);
-        }}
-        </script>
-        """)
-        if v_ans_audio:
-            st.audio(v_ans_audio, format="audio/mp3", autoplay=True)
+          </script>
+        </body>
+        </html>
+        """
+        components.html(confirm_component_html, height=105, scrolling=False)
 
     # Suggested / Alternative Destinations from Voice Query (Interactive 1-Click Options)
     if st.session_state.get("suggested_destinations"):
@@ -1922,57 +2090,270 @@ else:
         # Spoken Audio Text & TTS Generation
         active_speech_text = active_step.get("audio_text", active_step.get("instruction", ""))
         should_play_speech = st.session_state.get("auto_speech", False)
-
-        step_audio_bytes = generate_step_audio(active_speech_text, active_lang)
-        if step_audio_bytes:
-            st.audio(step_audio_bytes, format="audio/mp3", autoplay=should_play_speech)
-
         if should_play_speech:
             st.session_state["auto_speech"] = False
 
-        # Universal Browser Voice Assistant Player (Works 100% on Cloud/Local without external APIs)
+        step_audio_bytes = generate_step_audio(active_speech_text, active_lang)
+        b64_step_audio = base64.b64encode(step_audio_bytes).decode('ascii') if step_audio_bytes else ""
         step_lang_code = {"Kannada": "kn-IN", "Hindi": "hi-IN", "English": "en-IN"}.get(active_lang, "en-IN")
         escaped_step_text = json.dumps(active_speech_text)
+        auto_play_js = "true" if should_play_speech else "false"
+        voice_guide_title = t.get('voice_assistant_title', 'Voice Guide')
 
-        st.html(f"""
-        <div style="background:#FFFFFF; border:1.5px solid #0284C7; border-radius:10px; padding:10px 14px; margin:10px 0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; box-shadow:0 2px 8px rgba(2,132,199,0.08);">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="color:#0284C7;">{get_svg_icon('speaker', size=18, color='#0284C7')}</span>
-                <span style="font-size:12.5px; font-weight:800; color:#0369A1; text-transform:uppercase; letter-spacing:0.5px;">
-                    {t.get('voice_assistant_title', 'Voice Guide')} ({active_lang})
-                </span>
+        guide_component_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta charset="utf-8">
+        <style>
+          * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }}
+          body {{ background: transparent; overflow: hidden; padding: 2px; }}
+          .voice-guide-bar {{
+            background: #FFFFFF;
+            border: 1.5px solid #0284C7;
+            border-radius: 10px;
+            padding: 8px 14px;
+            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 48px;
+          }}
+          .vg-left {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }}
+          .vg-icon-box {{
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #EFF6FF;
+            border: 1px solid #BAE6FD;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0284C7;
+            font-size: 15px;
+          }}
+          .vg-title-group {{
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+          }}
+          .vg-title {{
+            font-size: 12px;
+            font-weight: 800;
+            color: #0369A1;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          }}
+          .vg-status {{
+            font-size: 11px;
+            color: #64748B;
+            font-weight: 600;
+          }}
+          .sound-wave {{
+            display: none;
+            align-items: center;
+            gap: 3px;
+            height: 14px;
+          }}
+          .sound-wave.active {{
+            display: inline-flex;
+          }}
+          .wave-bar {{
+            width: 3px;
+            height: 100%;
+            background: #0284C7;
+            border-radius: 1px;
+            animation: wave 0.7s ease-in-out infinite alternate;
+          }}
+          .wave-bar:nth-child(2) {{ animation-delay: 0.2s; }}
+          .wave-bar:nth-child(3) {{ animation-delay: 0.4s; }}
+          @keyframes wave {{
+            0% {{ height: 25%; }}
+            100% {{ height: 100%; }}
+          }}
+          .vg-actions {{
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          }}
+          .btn-play-guide {{
+            background: #0284C7;
+            color: #FFFFFF !important;
+            border: none;
+            border-radius: 6px;
+            padding: 7px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 1px 4px rgba(2, 132, 199, 0.25);
+            transition: all 0.15s ease;
+          }}
+          .btn-play-guide:hover {{ background: #0369A1; transform: translateY(-1px); }}
+          .btn-play-guide:active {{ transform: translateY(1px); }}
+          .btn-play-guide.playing {{ background: #D97706 !important; }}
+          .btn-stop-guide {{
+            background: #F8FAFC;
+            color: #475569;
+            border: 1px solid #CBD5E1;
+            border-radius: 6px;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+          }}
+          .btn-stop-guide:hover {{ background: #F1F5F9; color: #0F172A; }}
+        </style>
+        </head>
+        <body>
+          <div class="voice-guide-bar">
+            <div class="vg-left">
+              <div class="vg-icon-box">🔊</div>
+              <div class="vg-title-group">
+                <div class="vg-title">
+                  <span>{voice_guide_title} ({active_lang})</span>
+                  <div class="sound-wave" id="wave-anim">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                  </div>
+                </div>
+                <div class="vg-status" id="vg-status-text">Click 'Listen Aloud' to hear spoken directions</div>
+              </div>
             </div>
-            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                <button type="button" id="btn-speak-step-tts" onclick="window.mlacwSpeakStep()" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:6px 14px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 4px rgba(2,132,199,0.25);">
-                    {get_svg_icon('play', size=13, color='#FFFFFF', filled=True)}
-                    <span>Listen Aloud / ಧ್ವನಿ ಕೇಳಿ</span>
-                </button>
-                <button type="button" onclick="window.mlacwStopStep()" style="background:#F1F5F9; color:#475569; border:1px solid #CBD5E1; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer;">
-                    {get_svg_icon('stop', size=12, color='#475569', filled=True)} Stop
-                </button>
+            <div class="vg-actions">
+              <button type="button" class="btn-play-guide" id="btn-guide-play" onclick="toggleGuideAudio()">
+                <span id="guide-icon">▶</span>
+                <span id="guide-label">Listen Aloud / ಧ್ವನಿ ಕೇಳಿ</span>
+              </button>
+              <button type="button" class="btn-stop-guide" onclick="stopGuideAudio()">
+                <span>⏹</span> Stop
+              </button>
             </div>
-        </div>
-        <script>
-        window.mlacwSpeakStep = function() {{
-            const synth = window.speechSynthesis;
-            if (!synth) return;
-            synth.cancel();
-            synth.resume();
-            const text = {escaped_step_text};
-            const u = new SpeechSynthesisUtterance(text);
-            u.lang = '{step_lang_code}';
-            u.rate = 0.95;
-            const voices = synth.getVoices() || [];
-            const prefix = '{step_lang_code}'.split('-')[0].toLowerCase();
-            const matched = voices.find(v => v.lang && (v.lang.toLowerCase() === '{step_lang_code}'.toLowerCase() || v.lang.toLowerCase().startsWith(prefix)));
-            if (matched) u.voice = matched;
-            synth.speak(u);
-        }};
-        window.mlacwStopStep = function() {{
-            if (window.speechSynthesis) window.speechSynthesis.cancel();
-        }};
-        </script>
-        """)
+          </div>
+
+          <script>
+            const b64Audio = "{b64_step_audio}";
+            const stepText = {escaped_step_text};
+            const langCode = "{step_lang_code}";
+            const autoPlayOnLoad = {auto_play_js};
+
+            let audioObj = null;
+            let isPlaying = false;
+
+            if (b64Audio && b64Audio.length > 50) {{
+              try {{
+                audioObj = new Audio("data:audio/mp3;base64," + b64Audio);
+                audioObj.onended = () => resetGuideUI();
+                audioObj.onerror = () => audioObj = null;
+              }} catch(e) {{ audioObj = null; }}
+            }}
+
+            function resetGuideUI() {{
+              isPlaying = false;
+              const btn = document.getElementById("btn-guide-play");
+              const icon = document.getElementById("guide-icon");
+              const label = document.getElementById("guide-label");
+              const wave = document.getElementById("wave-anim");
+              const status = document.getElementById("vg-status-text");
+
+              if (btn) btn.classList.remove("playing");
+              if (icon) icon.innerText = "▶";
+              if (label) label.innerText = "Listen Aloud / ಧ್ವನಿ ಕೇಳಿ";
+              if (wave) wave.classList.remove("active");
+              if (status) status.innerText = "Instruction playback completed.";
+            }}
+
+            function toggleGuideAudio() {{
+              if (isPlaying) {{
+                stopGuideAudio();
+                return;
+              }}
+              playGuideAudio();
+            }}
+
+            function playGuideAudio() {{
+              stopGuideAudio();
+              isPlaying = true;
+              const btn = document.getElementById("btn-guide-play");
+              const icon = document.getElementById("guide-icon");
+              const label = document.getElementById("guide-label");
+              const wave = document.getElementById("wave-anim");
+              const status = document.getElementById("vg-status-text");
+
+              if (btn) btn.classList.add("playing");
+              if (icon) icon.innerText = "⏸";
+              if (label) label.innerText = "Pause / ವಿರಾಮ";
+              if (wave) wave.classList.add("active");
+              if (status) status.innerText = "🔊 Speaking checkpoint directions...";
+
+              if (audioObj) {{
+                audioObj.currentTime = 0;
+                audioObj.play().catch(e => {{
+                  fallbackGuideSpeech();
+                }});
+              }} else {{
+                fallbackGuideSpeech();
+              }}
+            }}
+
+            function fallbackGuideSpeech() {{
+              if (!window.speechSynthesis) return;
+              try {{
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.resume();
+                const u = new SpeechSynthesisUtterance(stepText);
+                u.lang = langCode;
+                u.rate = 0.95;
+                const voices = window.speechSynthesis.getVoices() || [];
+                const prefix = langCode.split('-')[0].toLowerCase();
+                const match = voices.find(v => v.lang && (v.lang.toLowerCase() === langCode.toLowerCase() || v.lang.toLowerCase().startsWith(prefix)));
+                if (match) u.voice = match;
+                u.onend = () => resetGuideUI();
+                u.onerror = () => resetGuideUI();
+                window.speechSynthesis.speak(u);
+              }} catch(err) {{
+                resetGuideUI();
+              }}
+            }}
+
+            function stopGuideAudio() {{
+              if (audioObj) {{
+                try {{ audioObj.pause(); audioObj.currentTime = 0; }} catch(e) {{}}
+              }}
+              if (window.speechSynthesis) {{
+                try {{ window.speechSynthesis.cancel(); }} catch(e) {{}}
+              }}
+              resetGuideUI();
+              const status = document.getElementById("vg-status-text");
+              if (status) status.innerText = "Audio stopped. Click Listen Aloud to replay.";
+            }}
+
+            if (autoPlayOnLoad) {{
+              setTimeout(() => {{
+                playGuideAudio();
+              }}, 200);
+            }}
+          </script>
+        </body>
+        </html>
+        """
+        components.html(guide_component_html, height=58, scrolling=False)
 
         # Live Listening Banner if mic is active in navigation
         if st.session_state.get("mic_active") == "navigation":
