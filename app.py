@@ -362,55 +362,75 @@ def handle_voice_query_action(q_text: str):
     detected_language = parsed.get("detected_language", st.session_state.get("language", "English"))
     matched_target = parsed.get("matched_node")
 
-    # Fallback substring matching if NLP engine returns None
-    if not matched_target:
-        for loc_name in graph_engine.locations_dict.keys():
-            if loc_name.lower() in clean_cmd or any(token in clean_cmd for token in loc_name.lower().split() if len(token) > 3):
-                matched_target = loc_name
-                break
-
+    # Collect smart candidate recommendations based on voice query
+    candidates = []
     if matched_target and matched_target in graph_engine.locations_dict:
-        st.session_state["language"] = detected_language
-        st.session_state["language_selected"] = True
-        st.session_state["mic_active"] = False
+        candidates.append(matched_target)
 
-        target_info = graph_engine.locations_dict.get(matched_target, {})
-        cur_o = st.session_state.get("current_origin", "Main Gate")
-        if cur_o == matched_target:
-            cur_o = "Main Gate" if matched_target != "Main Gate" else "Quadrangle"
-            st.session_state["current_origin"] = cur_o
-        orig_info = graph_engine.locations_dict.get(cur_o, {})
+    # Substring & keyword matching
+    clean_words = [w for w in re.sub(r'[^\w\s]', ' ', clean_cmd).split() if len(w) >= 2]
+    for loc_name in graph_engine.locations_dict.keys():
+        loc_lower = loc_name.lower()
+        if loc_name not in candidates:
+            if loc_lower in clean_cmd or any(token in clean_cmd for token in loc_lower.split() if len(token) > 2):
+                candidates.append(loc_name)
+            elif any(w in loc_lower for w in clean_words if len(w) > 3):
+                candidates.append(loc_name)
 
-        if detected_language == "Kannada":
-            t_name = target_info.get("kannada_name") or matched_target
-            o_name = orig_info.get("kannada_name") or cur_o
-            spoken_ans = f"{t_name} ಗೆ ಮಾರ್ಗಸೂಚಿ ಸಿದ್ಧವಾಗಿದೆ. {o_name} ನಿಂದ ಪ್ರಾರಂಭಿಸಿ, ಕೆಳಗಿನ ಸೂಚನೆಗಳನ್ನು ಅನುಸರಿಸಿ."
-        elif detected_language == "Hindi":
-            t_name = target_info.get("hindi_name") or matched_target
-            o_name = orig_info.get("hindi_name") or cur_o
-            spoken_ans = f"{t_name} के लिए नेविगेशन शुरू हो रहा है। {o_name} से शुरू करके नीचे दिए गए निर्देशों का पालन करें।"
-        else:
-            spoken_ans = f"Navigating to {matched_target}. Starting from {cur_o}, follow the turn-by-turn guidance below."
+    # Category synonyms (washroom, lab, library, canteen, classroom, principal)
+    if any(w in clean_cmd for w in ["washroom", "toilet", "restroom", "ಶೌಚಾಲಯ", "शौचालय"]):
+        for w_loc in ["Girls Washroom", "Floor 1 Student Washroom", "Gents Washroom", "Floor 2 West Restroom"]:
+            if w_loc in graph_engine.locations_dict and w_loc not in candidates:
+                candidates.append(w_loc)
+    if any(w in clean_cmd for w in ["library", "ಗ್ರಂಥಾಲಯ", "ಪುಸ್ತಕ", "लाइब्रेरी", "पुस्तकालय"]):
+        for l_loc in ["Central Library", "Library (PG)"]:
+            if l_loc in graph_engine.locations_dict and l_loc not in candidates:
+                candidates.append(l_loc)
+    if any(w in clean_cmd for w in ["cs", "comp", "computer", "ಕಂಪ್ಯೂಟರ್", "कंप्यूटर"]):
+        for c_loc in ["Dept. of Computer Science & Staff Room", "Computer Lab 1", "Computer Lab 2"]:
+            if c_loc in graph_engine.locations_dict and c_loc not in candidates:
+                candidates.append(c_loc)
 
-        reply_audio = generate_step_audio(spoken_ans, detected_language)
-        st.session_state["voice_assistant_response"] = (spoken_ans, detected_language, reply_audio)
-        st.session_state["app_step"] = 3
-        set_route_endpoint(matched_target, "destination", trigger_speech=True)
-        return
+    # If still no candidates, provide popular campus hubs so user always gets an active route
+    if not candidates:
+        for p_loc in ["Central Library", "Classroom G11", "Dept. of Computer Science & Staff Room", "Girls Washroom", "Canteen Area"]:
+            if p_loc in graph_engine.locations_dict and p_loc not in candidates:
+                candidates.append(p_loc)
+
+    # Pick best destination: primary match if valid, else first candidate
+    chosen_dest = matched_target if (matched_target and matched_target in graph_engine.locations_dict) else candidates[0]
+
+    # Store remaining candidates as clickable alternative options for the user
+    st.session_state["suggested_destinations"] = [c for c in candidates if c != chosen_dest][:4]
+
+    st.session_state["language"] = detected_language
+    st.session_state["language_selected"] = True
+    st.session_state["mic_active"] = False
+
+    target_info = graph_engine.locations_dict.get(chosen_dest, {})
+    cur_o = st.session_state.get("current_origin", "Main Gate")
+    if cur_o == chosen_dest:
+        cur_o = "Main Gate" if chosen_dest != "Main Gate" else "Quadrangle"
+        st.session_state["current_origin"] = cur_o
+    orig_info = graph_engine.locations_dict.get(cur_o, {})
+
+    if detected_language == "Kannada":
+        t_name = target_info.get("kannada_name") or chosen_dest
+        o_name = orig_info.get("kannada_name") or cur_o
+        spoken_ans = f"{t_name} ಗೆ ಮಾರ್ಗಸೂಚಿ ಸಿದ್ಧವಾಗಿದೆ. {o_name} ನಿಂದ ಪ್ರಾರಂಭಿಸಿ, ಕೆಳಗಿನ ಸೂಚನೆಗಳನ್ನು ಅನುಸರಿಸಿ."
+    elif detected_language == "Hindi":
+        t_name = target_info.get("hindi_name") or chosen_dest
+        o_name = orig_info.get("hindi_name") or cur_o
+        spoken_ans = f"{t_name} के लिए नेविगेशन शुरू हो रहा है। {o_name} से शुरू करके नीचे दिए गए निर्देशों का पालन करें।"
     else:
-        if detected_language == "Kannada":
-            err_ans = f"ಕ್ಷಮಿಸಿ, '{clean_q}' ಸ್ಥಳ ಕಂಡುಬಂದಿಲ್ಲ. ದಯವಿಟ್ಟು ಲೈಬ್ರರಿ, ಜಿ11, ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್ ಅಥವಾ ಶೌಚಾಲಯ ಪ್ರಯತ್ನಿಸಿ."
-        elif detected_language == "Hindi":
-            err_ans = f"क्षमा करें, '{clean_q}' स्थान नहीं मिला। कृपया पुस्तकालय, जी11, कंप्यूटर साइंस या शौचालय बोलें।"
-        else:
-            err_ans = f"Sorry, could not find '{clean_q}'. Try asking for Library, Classroom G11, Computer Science, or Washroom."
+        spoken_ans = f"Navigating to {chosen_dest}. Starting from {cur_o}, follow the turn-by-turn guidance below."
 
-        err_audio = generate_step_audio(err_ans, detected_language)
-        st.session_state["voice_assistant_response"] = (err_ans, detected_language, err_audio)
-        st.session_state["mic_active"] = False
-        st.session_state["input_mode"] = "voice"
-        st.session_state["app_step"] = 2
-        st.rerun()
+    # Immediate response for instant browser TTS speech without network blocking
+    st.session_state["voice_assistant_response"] = (spoken_ans, detected_language, None)
+    st.session_state["auto_speech"] = True
+    st.session_state["app_step"] = 3
+    set_route_endpoint(chosen_dest, "destination", trigger_speech=True)
+    return
 
 
 def render_live_mic_banner(lang: str, key_suffix: str = "main"):
@@ -429,7 +449,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
         background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
         border: 2px solid #E11D48;
         border-radius: 12px;
-        padding: 14px 18px;
+        padding: 12px 16px;
         box-sizing: border-box;
       }}
       .mic-status-row {{
@@ -442,7 +462,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        height: 20px;
+        height: 18px;
       }}
       .pulse-bar {{
         width: 4px;
@@ -458,30 +478,70 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
         100% {{ height: 100%; }}
       }}
       #transcript-view {{
-        margin-top: 10px;
+        margin-top: 8px;
         background: #FFFFFF;
         border: 1.5px dashed #F43F5E;
         border-radius: 8px;
-        padding: 10px 14px;
-        font-size: 14px;
+        padding: 8px 12px;
+        font-size: 13.5px;
         color: #0F172A;
-        min-height: 40px;
+        min-height: 38px;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 10px;
       }}
       .mic-btn {{
         background: #E11D48;
         color: #FFFFFF;
         border: none;
         border-radius: 6px;
-        padding: 8px 16px;
+        padding: 7px 14px;
         font-weight: 700;
-        font-size: 13px;
+        font-size: 12px;
         cursor: pointer;
+        white-space: nowrap;
       }}
       .mic-btn:hover {{
         background: #BE123C;
+      }}
+      .quick-chips {{
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }}
+      .chip-link {{
+        background: #FFFFFF;
+        border: 1px solid #FECDD3;
+        color: #9F1239;
+        text-decoration: none;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+      }}
+      .chip-link:hover {{
+        background: #FFE4E6;
+      }}
+      .nav-action-btn {{
+        background: #0284C7;
+        color: #FFFFFF !important;
+        text-decoration: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 800;
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        box-shadow: 0 1px 4px rgba(2,132,199,0.3);
+        cursor: pointer;
+        white-space: nowrap;
       }}
     </style>
     </head>
@@ -495,18 +555,27 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
               <div class="pulse-bar"></div>
             </div>
             <div>
-              <span style="font-weight:800; color:#9F1239; font-size:14px;">🔴 VOICE ASSISTANT LISTENING</span>
-              <div style="font-size:11px; color:#BE123C;">ಧ್ವನಿ ಆಲಿಸಲಾಗುತ್ತಿದೆ • बोलें, सिस्टम सुन रहा है...</div>
+              <span style="font-weight:800; color:#9F1239; font-size:13.5px;">🔴 VOICE ASSISTANT LISTENING</span>
+              <span style="font-size:11px; color:#BE123C; margin-left:6px;">ಧ್ವನಿ ಆಲಿಸಲಾಗುತ್ತಿದೆ • बोलें, सिस्टम सुन रहा है...</span>
             </div>
           </div>
-          <div style="font-size:11px; font-weight:700; color:#9F1239; background:#FFE4E6; border:1px solid #FECDD3; padding:4px 8px; border-radius:12px;">
+          <div style="font-size:11px; font-weight:700; color:#9F1239; background:#FFE4E6; border:1px solid #FECDD3; padding:2px 8px; border-radius:10px;">
             Lang: {lang_code}
           </div>
         </div>
 
         <div id="transcript-view">
-          <span id="transcript-text" style="color:#0369A1; font-weight:600;">🎙️ Click 'Start Speaking' and say your destination...</span>
+          <span id="transcript-text" style="color:#0369A1; font-weight:600;">🎙️ Click 'Start Speaking' and say your destination (e.g. 'Library', 'Computer Science')...</span>
           <button class="mic-btn" id="listen-toggle">🎙️ Start Speaking</button>
+        </div>
+
+        <div class="quick-chips">
+          <span style="font-size:10.5px; color:#9F1239; font-weight:700;">Or tap to navigate:</span>
+          <a class="chip-link" href="?voice_q=Central%20Library" target="_top">📚 Library</a>
+          <a class="chip-link" href="?voice_q=Computer%20Science" target="_top">💻 Computer Science</a>
+          <a class="chip-link" href="?voice_q=Classroom%20G11" target="_top">🏫 Classroom G11</a>
+          <a class="chip-link" href="?voice_q=Girls%20Washroom" target="_top">🚻 Washroom</a>
+          <a class="chip-link" href="?voice_q=Canteen%20Area" target="_top">☕ Canteen</a>
         </div>
       </div>
 
@@ -516,7 +585,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
         const btn = document.getElementById("listen-toggle");
 
         if (!SpeechClass) {{
-          txt.innerHTML = "⚠️ Speech Recognition is not supported in this browser. Please use Chrome or Edge.";
+          txt.innerHTML = "⚠️ Speech Recognition is not supported in this browser. Please use Chrome or Edge, or tap a destination chip below.";
           btn.style.display = "none";
         }} else {{
           const recognition = new SpeechClass();
@@ -542,7 +611,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
             active = true;
             btn.textContent = "🔴 Listening...";
             btn.style.background = "#9F1239";
-            txt.innerHTML = "Listening... Speak clearly now.";
+            txt.innerHTML = "Listening... Speak your destination clearly now.";
           }};
 
           recognition.onresult = (event) => {{
@@ -561,14 +630,49 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
             }}
             if (final.trim().length > 0) {{
               const cleanFinal = encodeURIComponent(final.trim());
-              txt.innerHTML = "✅ Processing: <b>" + final.trim() + "</b>...";
+              const displayText = final.trim();
+              
+              // Provide an immediate 1-click action button inside the card so user is never blocked
+              txt.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">
+                  <span style="color:#0F172A; font-weight:700; font-size:13px;">🗣️ "${{displayText}}"</span>
+                  <a id="btn-voice-proceed" class="nav-action-btn" href="?voice_q=${{cleanFinal}}" target="_top">
+                    <span>🚀 Navigate</span> ➔
+                  </a>
+                </div>
+              `;
+
+              // Trigger multi-pathway navigation automatically
               setTimeout(() => {{
+                // 1. Direct top anchor click (highest browser compatibility across sandboxes)
+                const proceedBtn = document.getElementById("btn-voice-proceed");
+                if (proceedBtn) {{
+                  try {{ proceedBtn.click(); }} catch(e) {{}}
+                }}
+
+                // 2. Direct top location assignment
+                try {{
+                  const targetUrl = (window.top.location.pathname || "/") + '?voice_q=' + cleanFinal;
+                  window.top.location.href = targetUrl;
+                  return;
+                }} catch (e) {{}}
+
+                // 3. Direct parent location assignment
+                try {{
+                  const targetUrl = (window.parent.location.pathname || "/") + '?voice_q=' + cleanFinal;
+                  window.parent.location.href = targetUrl;
+                  return;
+                }} catch (e) {{}}
+
+                // 4. Fallback search setter
                 try {{
                   window.top.location.search = '?voice_q=' + cleanFinal;
                 }} catch (e) {{
-                  window.parent.location.search = '?voice_q=' + cleanFinal;
+                  try {{
+                    window.parent.location.search = '?voice_q=' + cleanFinal;
+                  }} catch (e2) {{}}
                 }}
-              }}, 300);
+              }}, 350);
             }}
           }};
 
@@ -577,9 +681,9 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
             btn.textContent = "🎙️ Start Speaking";
             btn.style.background = "#E11D48";
             if (e.error === 'not-allowed') {{
-              txt.innerHTML = "⚠️ Microphone access was blocked. Please allow mic permissions in your browser.";
+              txt.innerHTML = "⚠️ Microphone access was blocked. Please allow mic permissions in your browser or tap a chip below.";
             }} else if (e.error === 'no-speech') {{
-              txt.innerHTML = "⚠️ No speech detected. Click Start to try again.";
+              txt.innerHTML = "⚠️ No speech detected. Click Start to try again or tap a chip below.";
             }} else {{
               txt.innerHTML = "⚠️ Error: " + e.error;
             }}
@@ -596,7 +700,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
     </html>
     """
 
-    components.html(component_html, height=125, scrolling=False)
+    components.html(component_html, height=138, scrolling=False)
 
     b_col1, b_col2, b_col3, b_col4, b_col5 = st.columns([1.6, 1.3, 1.4, 1.2, 1.2], gap="small")
     with b_col1:
@@ -604,18 +708,17 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
             st.session_state["mic_active"] = False
             st.rerun()
     with b_col2:
-        if st.button("🗣️ \"Library\"", key=f"mic_chip_1_{key_suffix}", use_container_width=True):
+        if st.button('🗣️ "Library"', key=f"mic_chip_1_{key_suffix}", use_container_width=True):
             handle_voice_query_action("Take me to Library")
     with b_col3:
-        if st.button("🗣️ \"Computer Science\"", key=f"mic_chip_2_{key_suffix}", use_container_width=True):
+        if st.button('🗣️ "Computer Science"', key=f"mic_chip_2_{key_suffix}", use_container_width=True):
             handle_voice_query_action("Where is Computer Science Department?")
     with b_col4:
-        if st.button("🗣️ \"Next Step\"", key=f"mic_chip_3_{key_suffix}", use_container_width=True):
+        if st.button('🗣️ "Next Step"', key=f"mic_chip_3_{key_suffix}", use_container_width=True):
             handle_voice_query_action("Next")
     with b_col5:
-        if st.button("🗣️ \"Repeat\"", key=f"mic_chip_4_{key_suffix}", use_container_width=True):
+        if st.button('🗣️ "Repeat"', key=f"mic_chip_4_{key_suffix}", use_container_width=True):
             handle_voice_query_action("Repeat")
-
 # Check URL query param bridge for Web Speech STT transcripts
 if "voice_q" in st.query_params:
     raw_v_query = str(st.query_params["voice_q"]).strip()
@@ -1565,6 +1668,25 @@ else:
         """)
         if v_ans_audio:
             st.audio(v_ans_audio, format="audio/mp3", autoplay=True)
+
+    # Suggested / Alternative Destinations from Voice Query (Interactive 1-Click Options)
+    if st.session_state.get("suggested_destinations"):
+        sugg_list = st.session_state.get("suggested_destinations", [])
+        if sugg_list:
+            st.markdown(
+                f"<div style='background:#F0F9FF; border:1px solid #BAE6FD; border-radius:8px; padding:10px 14px; margin-bottom:12px;'>"
+                f"<div style='font-size:12.5px; font-weight:800; color:#0369A1; margin-bottom:6px; display:flex; align-items:center; gap:6px;'>"
+                f"{get_svg_icon('compass', size=15, color='#0284C7')} <span>Alternative Voice Matches — Tap to switch route instantly:</span>"
+                f"</div>"
+                f"</div>",
+                unsafe_allow_html=True
+            )
+            sugg_cols = st.columns(min(len(sugg_list), 4), gap="small")
+            for s_idx, cand in enumerate(sugg_list[:4]):
+                with sugg_cols[s_idx % len(sugg_cols)]:
+                    c_lbl = format_room_label(cand, active_lang)
+                    if st.button(f"📍 {c_lbl}", key=f"sugg_dest_btn_{s_idx}_{cand[:10]}", use_container_width=True):
+                        set_route_endpoint(cand, "destination", trigger_speech=True)
 
     # ----------------------------------------------------
     # Active Wayfinding Route Selector (Source & Destination)
