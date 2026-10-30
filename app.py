@@ -316,26 +316,30 @@ def handle_voice_query_action(q_text: str):
     clean_q = str(q_text).strip()
     clean_cmd = clean_q.lower()
 
-    # 1. Spoken Voice Navigation Commands
-    if any(w in clean_cmd for w in ["next", "forward", "ಮುಂದೆ", "ಮುಂದಿನ", "आगे", "अगला", "done", "reached", "ತಲುಪಿದೆ", "पहुँच गए"]):
+    # 1. Spoken Voice Navigation Commands during active navigation
+    if any(w in clean_cmd for w in ["next", "forward", "ಮುಂದೆ", "ಮುಂದಿನ", "आगे", "अगला", "done", "reached", "ತಲುಪಿದೆ", "ಪಹುँच गए"]):
         curr_idx = st.session_state.get("current_step_index", 0)
         st.session_state["current_step_index"] = curr_idx + 1
         st.session_state["auto_speech"] = True
         st.session_state["mic_active"] = False
+        st.session_state["app_step"] = 3
         st.rerun()
     elif any(w in clean_cmd for w in ["repeat", "again", "replay", "ಮತ್ತೊಮ್ಮೆ", "ಮತ್ತೆ", "ಪುನಃ", "दोहराएं", "फिर से"]):
         st.session_state["auto_speech"] = True
         st.session_state["mic_active"] = False
+        st.session_state["app_step"] = 3
         st.rerun()
     elif any(w in clean_cmd for w in ["back", "previous", "ಹಿಂದೆ", "ಹಿಂದಿನ", "ಹಿಂತಿರುಗಿ", "पीछे", "पिछला"]):
         curr_idx = st.session_state.get("current_step_index", 0)
         st.session_state["current_step_index"] = max(0, curr_idx - 1)
         st.session_state["auto_speech"] = True
         st.session_state["mic_active"] = False
+        st.session_state["app_step"] = 3
         st.rerun()
     elif any(w in clean_cmd for w in ["lost", "confused", "help", "ದಾರಿ ತಪ್ಪಿದೆ", "ಕಳೆದು", "ಸಹಾಯ", "खो गया", "भटक", "मदद"]):
         st.session_state["recovery_mode"] = True
         st.session_state["mic_active"] = False
+        st.session_state["app_step"] = 3
         st.rerun()
     elif clean_cmd in ["english", "in english"]:
         st.session_state["language"] = "English"
@@ -355,8 +359,15 @@ def handle_voice_query_action(q_text: str):
 
     # 2. Spoken Destination or Query (Multilingual Conversational NLP)
     parsed = nlp_engine.parse_query(clean_q)
-    detected_language = parsed.get("detected_language", "English")
+    detected_language = parsed.get("detected_language", st.session_state.get("language", "English"))
     matched_target = parsed.get("matched_node")
+
+    # Fallback substring matching if NLP engine returns None
+    if not matched_target:
+        for loc_name in graph_engine.locations_dict.keys():
+            if loc_name.lower() in clean_cmd or any(token in clean_cmd for token in loc_name.lower().split() if len(token) > 3):
+                matched_target = loc_name
+                break
 
     if matched_target and matched_target in graph_engine.locations_dict:
         st.session_state["language"] = detected_language
@@ -367,6 +378,7 @@ def handle_voice_query_action(q_text: str):
         cur_o = st.session_state.get("current_origin", "Main Gate")
         if cur_o == matched_target:
             cur_o = "Main Gate" if matched_target != "Main Gate" else "Quadrangle"
+            st.session_state["current_origin"] = cur_o
         orig_info = graph_engine.locations_dict.get(cur_o, {})
 
         if detected_language == "Kannada":
@@ -382,6 +394,7 @@ def handle_voice_query_action(q_text: str):
 
         reply_audio = generate_step_audio(spoken_ans, detected_language)
         st.session_state["voice_assistant_response"] = (spoken_ans, detected_language, reply_audio)
+        st.session_state["app_step"] = 3
         set_route_endpoint(matched_target, "destination", trigger_speech=True)
         return
     else:
@@ -1500,6 +1513,58 @@ else:
             st.info(n_msg)
         else:
             st.success(n_msg)
+
+    # Voice Assistant Vocal Response Card (Spoken Route Confirmation on Step 3 Arrival)
+    if st.session_state.get("voice_assistant_response"):
+        v_ans_text, v_ans_lang, v_ans_audio = st.session_state.pop("voice_assistant_response")
+        v_lang_code = {"Kannada": "kn-IN", "Hindi": "hi-IN", "English": "en-IN"}.get(v_ans_lang, "en-IN")
+        escaped_v_ans = json.dumps(v_ans_text)
+        has_audio_str = "true" if v_ans_audio else "false"
+        render_html(f"""
+        <div style="background:linear-gradient(135deg, #F0F9FF, #E0F2FE); border:2px solid #0284C7; border-radius:12px; padding:14px 18px; margin-bottom:16px; box-shadow:0 3px 10px rgba(2,132,199,0.12);">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="color:#0284C7;">{get_svg_icon('speaker', size=20, color='#0284C7')}</span>
+                    <span style="font-size:13px; font-weight:800; color:#0369A1; text-transform:uppercase;">
+                        Spoken Route Confirmation ({v_ans_lang})
+                    </span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button type="button" onclick="window.mlacwSpeakAns()" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 4px rgba(2,132,199,0.25);">
+                        {get_svg_icon('play', size=12, color='#FFFFFF', filled=True)}
+                        <span>Listen Aloud / ಧ್ವನಿ ಕೇಳಿ</span>
+                    </button>
+                    {icon_badge('speaker', 'Vocal Route Activated', bg='#FFFFFF', color='#0284C7', border='#BAE6FD', size=12)}
+                </div>
+            </div>
+            <div style="font-size:15px; font-weight:700; color:#0F172A; line-height:1.5; margin-bottom:6px;">
+                "{v_ans_text}"
+            </div>
+        </div>
+        <script>
+        window.mlacwSpeakAns = function() {{
+            const synth = window.speechSynthesis;
+            if (!synth) return;
+            synth.cancel();
+            synth.resume();
+            const u = new SpeechSynthesisUtterance({escaped_v_ans});
+            u.lang = '{v_lang_code}';
+            u.rate = 0.95;
+            const voices = synth.getVoices() || [];
+            const prefix = '{v_lang_code}'.split('-')[0].toLowerCase();
+            const matched = voices.find(v => v.lang && (v.lang.toLowerCase() === '{v_lang_code}'.toLowerCase() || v.lang.toLowerCase().startsWith(prefix)));
+            if (matched) u.voice = matched;
+            synth.speak(u);
+        }};
+        if (!{has_audio_str}) {{
+            setTimeout(() => {{
+                try {{ window.mlacwSpeakAns(); }} catch(e) {{}}
+            }}, 200);
+        }}
+        </script>
+        """)
+        if v_ans_audio:
+            st.audio(v_ans_audio, format="audio/mp3", autoplay=True)
 
     # ----------------------------------------------------
     # Active Wayfinding Route Selector (Source & Destination)
