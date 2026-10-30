@@ -522,10 +522,29 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
                     updateStatus("🗣️ <b>Heard:</b> \"" + heard + "\"... Processing query...", "#0F172A");
                 }}
                 if (finalTranscript.trim().length > 0) {{
-                    setTimeout(function() {{
-                        const q = encodeURIComponent(finalTranscript.trim());
-                        window.location.search = '?voice_q=' + q;
-                    }}, 350);
+                    const finalQ = finalTranscript.trim();
+                    let submitted = false;
+                    try {{
+                        const inputEl = document.querySelector('.st-key-stage2_voice_input input, input[type="text"]');
+                        if (inputEl) {{
+                            inputEl.value = finalQ;
+                            inputEl.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                            inputEl.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                            const submitBtn = document.querySelector('.st-key-stage2_voice_submit_btn button');
+                            if (submitBtn) {{
+                                submitBtn.click();
+                                submitted = true;
+                            }}
+                        }}
+                    }} catch(e) {{
+                        console.log("Input trigger error:", e);
+                    }}
+                    if (!submitted) {{
+                        setTimeout(function() {{
+                            const q = encodeURIComponent(finalQ);
+                            window.location.search = '?voice_q=' + q;
+                        }}, 300);
+                    }}
                 }}
             }};
 
@@ -534,11 +553,11 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
                 isListening = false;
                 if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {{
                     updateStatus(
-                        "⚠️ <b>Microphone permission blocked or denied:</b><br>" +
+                        "⚠️ <b>Microphone permission blocked:</b><br>" +
                         "<span style='font-size:12px; font-weight:500; color:#991B1B; line-height:1.4; display:inline-block; margin-top:4px;'>" +
-                        "1. Click the lock 🔒 or tune icon next to <code>http://localhost:8501</code> in your browser address bar.<br>" +
-                        "2. Change <b>Microphone</b> to <b>'Allow'</b>.<br>" +
-                        "3. Click <b>'Retry Microphone'</b>, or use the quick buttons below.</span>",
+                        "1. Click the lock 🔒 or settings icon in your browser address bar.<br>" +
+                        "2. Set <b>Microphone</b> to <b>'Allow'</b>.<br>" +
+                        "3. Click <b>'Retry Microphone'</b>, or tap any quick sample question below!</span>",
                         "#B91C1C"
                     );
                     if (permBtn) {{
@@ -1142,6 +1161,8 @@ elif cur_step == 2:
         # Voice Assistant Vocal Response Card (if an answer was spoken)
         if st.session_state.get("voice_assistant_response"):
             v_ans_text, v_ans_lang, v_ans_audio = st.session_state["voice_assistant_response"]
+            v_lang_code = {"Kannada": "kn-IN", "Hindi": "hi-IN", "English": "en-IN"}.get(v_ans_lang, "en-IN")
+            escaped_v_ans = json.dumps(v_ans_text)
             render_html(f"""
             <div style="background:linear-gradient(135deg, #F0F9FF, #E0F2FE); border:2px solid #0284C7; border-radius:12px; padding:14px 18px; margin-bottom:16px; box-shadow:0 3px 10px rgba(2,132,199,0.12);">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
@@ -1151,12 +1172,34 @@ elif cur_step == 2:
                             Spoken Response ({v_ans_lang})
                         </span>
                     </div>
-                    {icon_badge('speaker', 'Vocal Answer Active', bg='#FFFFFF', color='#0284C7', border='#BAE6FD', size=12)}
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <button type="button" onclick="window.mlacwSpeakAns()" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 4px rgba(2,132,199,0.25);">
+                            {get_svg_icon('play', size=12, color='#FFFFFF', filled=True)}
+                            <span>Listen Aloud / ಧ್ವನಿ ಕೇಳಿ</span>
+                        </button>
+                        {icon_badge('speaker', 'Vocal Answer Ready', bg='#FFFFFF', color='#0284C7', border='#BAE6FD', size=12)}
+                    </div>
                 </div>
-                <div style="font-size:15px; font-weight:700; color:#0F172A; line-height:1.5; margin-bottom:8px;">
+                <div style="font-size:15px; font-weight:700; color:#0F172A; line-height:1.5; margin-bottom:6px;">
                     "{v_ans_text}"
                 </div>
             </div>
+            <script>
+            window.mlacwSpeakAns = function() {{
+                const synth = window.speechSynthesis;
+                if (!synth) return;
+                synth.cancel();
+                synth.resume();
+                const u = new SpeechSynthesisUtterance({escaped_v_ans});
+                u.lang = '{v_lang_code}';
+                u.rate = 0.95;
+                const voices = synth.getVoices() || [];
+                const prefix = '{v_lang_code}'.split('-')[0].toLowerCase();
+                const matched = voices.find(v => v.lang && (v.lang.toLowerCase() === '{v_lang_code}'.toLowerCase() || v.lang.toLowerCase().startsWith(prefix)));
+                if (matched) u.voice = matched;
+                synth.speak(u);
+            }};
+            </script>
             """)
             if v_ans_audio:
                 st.audio(v_ans_audio, format="audio/mp3", autoplay=True)
@@ -1767,6 +1810,50 @@ else:
 
         if should_play_speech:
             st.session_state["auto_speech"] = False
+
+        # Universal Browser Voice Assistant Player (Works 100% on Cloud/Local without external APIs)
+        step_lang_code = {"Kannada": "kn-IN", "Hindi": "hi-IN", "English": "en-IN"}.get(active_lang, "en-IN")
+        escaped_step_text = json.dumps(active_speech_text)
+
+        st.html(f"""
+        <div style="background:#FFFFFF; border:1.5px solid #0284C7; border-radius:10px; padding:10px 14px; margin:10px 0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; box-shadow:0 2px 8px rgba(2,132,199,0.08);">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="color:#0284C7;">{get_svg_icon('speaker', size=18, color='#0284C7')}</span>
+                <span style="font-size:12.5px; font-weight:800; color:#0369A1; text-transform:uppercase; letter-spacing:0.5px;">
+                    {t.get('voice_assistant_title', 'Voice Guide')} ({active_lang})
+                </span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <button type="button" id="btn-speak-step-tts" onclick="window.mlacwSpeakStep()" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:6px 14px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 4px rgba(2,132,199,0.25);">
+                    {get_svg_icon('play', size=13, color='#FFFFFF', filled=True)}
+                    <span>Listen Aloud / ಧ್ವನಿ ಕೇಳಿ</span>
+                </button>
+                <button type="button" onclick="window.mlacwStopStep()" style="background:#F1F5F9; color:#475569; border:1px solid #CBD5E1; border-radius:6px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer;">
+                    {get_svg_icon('stop', size=12, color='#475569', filled=True)} Stop
+                </button>
+            </div>
+        </div>
+        <script>
+        window.mlacwSpeakStep = function() {{
+            const synth = window.speechSynthesis;
+            if (!synth) return;
+            synth.cancel();
+            synth.resume();
+            const text = {escaped_step_text};
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = '{step_lang_code}';
+            u.rate = 0.95;
+            const voices = synth.getVoices() || [];
+            const prefix = '{step_lang_code}'.split('-')[0].toLowerCase();
+            const matched = voices.find(v => v.lang && (v.lang.toLowerCase() === '{step_lang_code}'.toLowerCase() || v.lang.toLowerCase().startsWith(prefix)));
+            if (matched) u.voice = matched;
+            synth.speak(u);
+        }};
+        window.mlacwStopStep = function() {{
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
+        }};
+        </script>
+        """)
 
         # Live Listening Banner if mic is active in navigation
         if st.session_state.get("mic_active") == "navigation":
