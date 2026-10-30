@@ -64,6 +64,45 @@ def render_html(html_str: str, sidebar: bool = False):
         st.markdown(cleaned, unsafe_allow_html=True)
 
 # ----------------------------------------------------
+# Top-Level Parent Window Navigation Bridge for Voice Queries
+# ----------------------------------------------------
+# Attaches an event listener to the parent Streamlit window via an inline image onerror trigger.
+# This ensures that when sandboxed iframes (e.g. SpeechRecognition in components.html) post a
+# 'VOICE_NAV' message, the top-level window directly updates its location without being blocked
+# by iframe sandbox restrictions (e.g. missing allow-top-navigation).
+render_html("""
+<img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'></svg>" style="display:none;" onload="(function(){
+    if (!window._mlacwVoiceNavAttached) {
+        window._mlacwVoiceNavAttached = true;
+        window.addEventListener('message', function(event) {
+            if (event && event.data && (event.data.type === 'VOICE_NAV' || event.data.voice_q)) {
+                var q = event.data.query || event.data.voice_q;
+                if (q && typeof q === 'string' && q.trim().length > 0) {
+                    var base = window.location.origin + window.location.pathname;
+                    if (base.endsWith('/')) base = base.slice(0, -1);
+                    window.location.href = base + '/?voice_q=' + encodeURIComponent(q.trim());
+                }
+            }
+        });
+    }
+})()" onerror="(function(){
+    if (!window._mlacwVoiceNavAttached) {
+        window._mlacwVoiceNavAttached = true;
+        window.addEventListener('message', function(event) {
+            if (event && event.data && (event.data.type === 'VOICE_NAV' || event.data.voice_q)) {
+                var q = event.data.query || event.data.voice_q;
+                if (q && typeof q === 'string' && q.trim().length > 0) {
+                    var base = window.location.origin + window.location.pathname;
+                    if (base.endsWith('/')) base = base.slice(0, -1);
+                    window.location.href = base + '/?voice_q=' + encodeURIComponent(q.trim());
+                }
+            }
+        });
+    }
+})()">
+""")
+
+# ----------------------------------------------------
 # 4. Data Loading & Engine Initialization
 # ----------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -531,17 +570,27 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
       .nav-action-btn {{
         background: #0284C7;
         color: #FFFFFF !important;
+        border: none;
+        outline: none;
         text-decoration: none;
-        padding: 6px 12px;
+        padding: 6px 14px;
         border-radius: 6px;
         font-weight: 800;
         font-size: 12px;
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 5px;
         box-shadow: 0 1px 4px rgba(2,132,199,0.3);
         cursor: pointer;
         white-space: nowrap;
+        transition: all 0.15s ease;
+      }}
+      .nav-action-btn:hover {{
+        background: #0369A1;
+        box-shadow: 0 2px 6px rgba(2,132,199,0.4);
+      }}
+      .nav-action-btn:active {{
+        transform: scale(0.97);
       }}
     </style>
     </head>
@@ -580,34 +629,101 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
       </div>
 
       <script>
+        // Ensure top-level parent window has the message listener attached (Same-Origin access)
+        try {{
+          if (window.parent && !window.parent._mlacwVoiceNavAttached) {{
+            window.parent._mlacwVoiceNavAttached = true;
+            window.parent.addEventListener('message', function(event) {{
+              if (event && event.data && (event.data.type === 'VOICE_NAV' || event.data.voice_q)) {{
+                var q = event.data.query || event.data.voice_q;
+                if (q && typeof q === 'string' && q.trim().length > 0) {{
+                  var base = window.parent.location.origin + window.parent.location.pathname;
+                  if (base.endsWith('/')) base = base.slice(0, -1);
+                  window.parent.location.href = base + '/?voice_q=' + encodeURIComponent(q.trim());
+                }}
+              }}
+            }});
+          }}
+        }} catch(e) {{}}
         window.navigateTop = function(event, query) {{
           if (event && event.preventDefault) event.preventDefault();
-          const clean = encodeURIComponent(query);
-          let base = "/";
+          if (!query || !query.trim()) return;
+          const cleanQ = query.trim();
+
+          // 1. Immediate visual confirmation for the user
+          const btn = document.getElementById("btn-voice-proceed");
+          if (btn) {{
+            btn.innerHTML = "<span>⏳ Navigating...</span>";
+            btn.style.background = "#15803D";
+            btn.style.color = "#FFFFFF";
+            btn.style.pointerEvents = "none";
+          }}
+          const txt = document.getElementById("transcript-text");
+          if (txt) {{
+            txt.innerHTML = "🚀 <b>Navigating to:</b> \"" + cleanQ + "\" ...";
+          }}
+
+          // 2. Multi-window postMessage to parent & top window (Bypasses iframe sandbox)
           try {{
-            if (window.top && window.top.location && window.top.location.origin && window.top.location.origin !== "null") {{
-              base = window.top.location.origin + (window.top.location.pathname || "/");
-            }} else if (window.parent && window.parent.location && window.parent.location.origin && window.parent.location.origin !== "null") {{
-              base = window.parent.location.origin + (window.parent.location.pathname || "/");
+            if (window.parent) {{
+              window.parent.postMessage({{ type: 'VOICE_NAV', query: cleanQ }}, '*');
             }}
           }} catch(e) {{}}
-          const fullUrl = base.replace(/\\/$/, '') + '/?voice_q=' + clean;
+          try {{
+            if (window.top) {{
+              window.top.postMessage({{ type: 'VOICE_NAV', query: cleanQ }}, '*');
+            }}
+          }} catch(e) {{}}
 
+          // 3. Inject unsandboxed script element into parent document context
           try {{
-            window.top.location.href = fullUrl;
-            return;
-          }} catch(e) {{}}
+            if (window.parent && window.parent.document && window.parent.document.body) {{
+              const scr = window.parent.document.createElement('script');
+              const encQ = encodeURIComponent(cleanQ);
+              scr.textContent = '(function() {{ try {{ var base = window.location.origin + window.location.pathname; window.location.href = base.replace(/\\/$/, "") + "/?voice_q=" + ' + JSON.stringify(encQ) + '; }} catch(err){{}} }})();';
+              window.parent.document.body.appendChild(scr);
+              setTimeout(function() {{ try {{ scr.remove(); }} catch(e){{}} }}, 1200);
+            }}
+          }} catch(e) {{
+            console.warn("Parent script injection error:", e);
+          }}
+
+          // 4. Direct Streamlit UI synchronization: populate text input & click Navigate button
           try {{
+            if (window.parent && window.parent.document) {{
+              const pdoc = window.parent.document;
+              const input = pdoc.querySelector('div.st-key-stage2_voice_input input, input[aria-label*="Voice Assistant"], input[type="text"]');
+              if (input) {{
+                const nativeSetter = (window.parent.HTMLInputElement && window.parent.HTMLInputElement.prototype)
+                  ? Object.getOwnPropertyDescriptor(window.parent.HTMLInputElement.prototype, 'value').set
+                  : null;
+                if (nativeSetter) {{
+                  nativeSetter.call(input, cleanQ);
+                }} else {{
+                  input.value = cleanQ;
+                }}
+                input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+
+                setTimeout(function() {{
+                  const navBtn = pdoc.querySelector('div.st-key-btn_voice_nav_action button, button[kind="primary"]');
+                  if (navBtn) navBtn.click();
+                }}, 100);
+              }}
+            }}
+          }} catch(e) {{
+            console.warn("Parent DOM interaction error:", e);
+          }}
+
+          // 5. Fallback URL assignment
+          try {{
+            const clean = encodeURIComponent(cleanQ);
+            let base = "/";
+            if (window.parent && window.parent.location && window.parent.location.origin && window.parent.location.origin !== "null") {{
+              base = window.parent.location.origin + (window.parent.location.pathname || "/");
+            }}
+            const fullUrl = base.replace(/\\/$/, '') + '/?voice_q=' + clean;
             window.parent.location.href = fullUrl;
-            return;
-          }} catch(e) {{}}
-          try {{
-            window.top.location.assign(fullUrl);
-            return;
-          }} catch(e) {{}}
-          try {{
-            window.parent.location.assign(fullUrl);
-            return;
           }} catch(e) {{}}
         }};
 
@@ -660,23 +776,29 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
               txt.innerHTML = "🗣️ <i>" + spoken + "</i>";
             }}
             if (final.trim().length > 0) {{
-              const cleanFinal = encodeURIComponent(final.trim());
-              const displayText = final.trim();
+              const displayText = final.trim().replace(/['"\\`]/g, ' ');
+              const safeAttrText = displayText.replace(/'/g, "\\'");
               
               // Provide an immediate 1-click action button inside the card with verified click handler
-              txt.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">
-                  <span style="color:#0F172A; font-weight:700; font-size:13px;">🗣️ "${{displayText}}"</span>
-                  <a id="btn-voice-proceed" class="nav-action-btn" href="javascript:void(0)" onclick="navigateTop(event, '${{displayText}}'); return false;">
-                    <span>🚀 Navigate</span> ➔
-                  </a>
-                </div>
-              `;
+              txt.innerHTML =
+                '<div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">' +
+                  '<span style="color:#0F172A; font-weight:700; font-size:13px;">🗣️ \"' + displayText + '\"</span>' +
+                  '<button id="btn-voice-proceed" type="button" class="nav-action-btn" onclick="navigateTop(event, \'' + safeAttrText + '\');">' +
+                    '<span>🚀 Navigate</span> ➔' +
+                  '</button>' +
+                '</div>';
+
+              const proceedBtn = document.getElementById("btn-voice-proceed");
+              if (proceedBtn) {{
+                proceedBtn.onclick = function(e) {{
+                  navigateTop(e, displayText);
+                }};
+              }}
 
               // Automatically navigate after brief visual confirmation
               setTimeout(() => {{
                 navigateTop(null, displayText);
-              }}, 300);
+              }}, 400);
             }}
           }};
 
