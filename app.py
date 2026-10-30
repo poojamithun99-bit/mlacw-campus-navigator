@@ -383,6 +383,7 @@ def handle_voice_query_action(q_text: str):
         reply_audio = generate_step_audio(spoken_ans, detected_language)
         st.session_state["voice_assistant_response"] = (spoken_ans, detected_language, reply_audio)
         set_route_endpoint(matched_target, "destination", trigger_speech=True)
+        return
     else:
         if detected_language == "Kannada":
             err_ans = f"ಕ್ಷಮಿಸಿ, '{clean_q}' ಸ್ಥಳ ಕಂಡುಬಂದಿಲ್ಲ. ದಯವಿಟ್ಟು ಲೈಬ್ರರಿ, ಜಿ11, ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್ ಅಥವಾ ಶೌಚಾಲಯ ಪ್ರಯತ್ನಿಸಿ."
@@ -390,6 +391,7 @@ def handle_voice_query_action(q_text: str):
             err_ans = f"क्षमा करें, '{clean_q}' स्थान नहीं मिला। कृपया पुस्तकालय, जी11, कंप्यूटर साइंस या शौचालय बोलें।"
         else:
             err_ans = f"Sorry, could not find '{clean_q}'. Try asking for Library, Classroom G11, Computer Science, or Washroom."
+
         err_audio = generate_step_audio(err_ans, detected_language)
         st.session_state["voice_assistant_response"] = (err_ans, detected_language, err_audio)
         st.session_state["mic_active"] = False
@@ -397,233 +399,191 @@ def handle_voice_query_action(q_text: str):
         st.session_state["app_step"] = 2
         st.rerun()
 
+
 def render_live_mic_banner(lang: str, key_suffix: str = "main"):
     lang_code = {"Kannada": "kn-IN", "Hindi": "hi-IN", "English": "en-IN"}.get(lang, "en-IN")
     
-    st.html(f"""
+    component_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
     <style>
-    .mic-live-banner-{key_suffix} {{
+      body {{
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }}
+      .mic-box {{
         background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
         border: 2px solid #E11D48;
         border-radius: 12px;
         padding: 14px 18px;
-        margin: 10px 0 12px 0;
-        box-shadow: 0 4px 20px rgba(225, 29, 72, 0.22);
-        animation: mic-pulse-border-{key_suffix} 1.6s infinite;
-    }}
-    @keyframes mic-pulse-border-{key_suffix} {{
-        0% {{ box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.45); }}
-        70% {{ box-shadow: 0 0 0 10px rgba(225, 29, 72, 0); }}
-        100% {{ box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }}
-    }}
-    .mic-wave-bar-{key_suffix} {{
+        box-sizing: border-box;
+      }}
+      .mic-status-row {{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }}
+      .pulse-indicator {{
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 20px;
+      }}
+      .pulse-bar {{
         width: 4px;
         height: 100%;
         background: #E11D48;
         border-radius: 2px;
-        animation: mic-wave-anim-{key_suffix} 0.8s ease-in-out infinite alternate;
-    }}
-    .mic-wave-bar-{key_suffix}:nth-child(1) {{ animation-delay: 0.1s; height: 35%; }}
-    .mic-wave-bar-{key_suffix}:nth-child(2) {{ animation-delay: 0.3s; height: 75%; }}
-    .mic-wave-bar-{key_suffix}:nth-child(3) {{ animation-delay: 0.2s; height: 100%; }}
-    .mic-wave-bar-{key_suffix}:nth-child(4) {{ animation-delay: 0.4s; height: 60%; }}
-    .mic-wave-bar-{key_suffix}:nth-child(5) {{ animation-delay: 0.15s; height: 40%; }}
-    @keyframes mic-wave-anim-{key_suffix} {{
-        0% {{ height: 25%; }}
+        animation: pulse 0.8s ease-in-out infinite alternate;
+      }}
+      .pulse-bar:nth-child(2) {{ animation-delay: 0.2s; }}
+      .pulse-bar:nth-child(3) {{ animation-delay: 0.4s; }}
+      @keyframes pulse {{
+        0% {{ height: 30%; }}
         100% {{ height: 100%; }}
-    }}
+      }}
+      #transcript-view {{
+        margin-top: 10px;
+        background: #FFFFFF;
+        border: 1.5px dashed #F43F5E;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-size: 14px;
+        color: #0F172A;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }}
+      .mic-btn {{
+        background: #E11D48;
+        color: #FFFFFF;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+      }}
+      .mic-btn:hover {{
+        background: #BE123C;
+      }}
     </style>
-    <div class="mic-live-banner-{key_suffix}">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <div style="display:inline-flex; align-items:center; gap:4px; height:24px;">
-                    <div class="mic-wave-bar-{key_suffix}"></div>
-                    <div class="mic-wave-bar-{key_suffix}"></div>
-                    <div class="mic-wave-bar-{key_suffix}"></div>
-                    <div class="mic-wave-bar-{key_suffix}"></div>
-                    <div class="mic-wave-bar-{key_suffix}"></div>
-                </div>
-                <div>
-                    <div style="font-size:15px; font-weight:800; color:#9F1239; letter-spacing:0.3px;">
-                        🔴 VOICE ASSISTANT LISTENING
-                    </div>
-                    <div style="font-size:12px; font-weight:700; color:#BE123C; margin-top:2px;">
-                        ಧ್ವನಿ ಆಲಿಸಲಾಗುತ್ತಿದೆ • बोलें, सिस्टम सुन रहा है...
-                    </div>
-                </div>
+    </head>
+    <body>
+      <div class="mic-box">
+        <div class="mic-status-row">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="pulse-indicator">
+              <div class="pulse-bar"></div>
+              <div class="pulse-bar"></div>
+              <div class="pulse-bar"></div>
             </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-                <div style="font-size:11px; font-weight:700; color:#9F1239; background:#FFE4E6; border:1px solid #FECDD3; padding:4px 10px; border-radius:20px;">
-                    Language: {lang} ({lang_code})
-                </div>
+            <div>
+              <span style="font-weight:800; color:#9F1239; font-size:14px;">🔴 VOICE ASSISTANT LISTENING</span>
+              <div style="font-size:11px; color:#BE123C;">ಧ್ವನಿ ಆಲಿಸಲಾಗುತ್ತಿದೆ • बोलें, सिस्टम सुन रहा है...</div>
             </div>
+          </div>
+          <div style="font-size:11px; font-weight:700; color:#9F1239; background:#FFE4E6; border:1px solid #FECDD3; padding:4px 8px; border-radius:12px;">
+            Lang: {lang_code}
+          </div>
         </div>
-        <div id="live-speech-box-{key_suffix}" style="margin-top:10px; background:#FFFFFF; border:1.5px dashed #F43F5E; border-radius:8px; padding:12px 14px; font-size:14px; color:#1E293B; min-height:48px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-            <div id="live-speech-text-{key_suffix}" style="font-style:normal; color:#0369A1; font-weight:600; flex:1 1 280px; line-height:1.4;">
-                🎙️ <b>Microphone ready:</b> Click <b>'Start Speaking'</b> to speak your destination.
-            </div>
-            <button id="btn-request-mic-{key_suffix}" type="button" style="background:linear-gradient(135deg, #E11D48 0%, #BE123C 100%); color:#FFFFFF; border:none; border-radius:6px; padding:8px 18px; font-weight:700; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(225,29,72,0.25); white-space:nowrap; transition:all 0.15s ease;">
-                🎙️ Start Speaking / ಮಾತನಾಡಿ
-            </button>
-        </div>
-    </div>
-    <script>
-    (function() {{
-        const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const txtBox = document.getElementById("live-speech-text-{key_suffix}");
-        const permBtn = document.getElementById("btn-request-mic-{key_suffix}");
 
-        function updateStatus(html, color) {{
-            if (txtBox) {{
-                txtBox.innerHTML = html;
-                if (color) txtBox.style.color = color;
-            }}
-        }}
+        <div id="transcript-view">
+          <span id="transcript-text" style="color:#0369A1; font-weight:600;">🎙️ Click 'Start Speaking' and say your destination...</span>
+          <button class="mic-btn" id="listen-toggle">🎙️ Start Speaking</button>
+        </div>
+      </div>
+
+      <script>
+        const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const txt = document.getElementById("transcript-text");
+        const btn = document.getElementById("listen-toggle");
 
         if (!SpeechClass) {{
-            updateStatus("⚠️ <b>Speech recognition is not supported in this browser.</b> Please use Google Chrome or Microsoft Edge, or tap the quick action buttons below!", "#DC2626");
-            if (permBtn) permBtn.style.display = "none";
-            return;
-        }}
+          txt.innerHTML = "⚠️ Speech Recognition is not supported in this browser. Please use Chrome or Edge.";
+          btn.style.display = "none";
+        }} else {{
+          const recognition = new SpeechClass();
+          recognition.continuous = false;
+          recognition.interimResults = true;
+          recognition.lang = "{lang_code}";
 
-        let recognition = null;
-        let isListening = false;
+          let active = false;
 
-        function startRecognition() {{
-            try {{
-                if (recognition) {{
-                    try {{ recognition.abort(); }} catch(e) {{}}
-                }}
-                recognition = new SpeechClass();
-                recognition.continuous = false;
-                recognition.interimResults = true;
-                recognition.lang = "{lang_code}";
-
-                recognition.onstart = function() {{
-                    isListening = true;
-                    updateStatus("🔴 <b>Microphone Active!</b> Speak now (e.g., 'Take me to Library', 'Classroom G11')...", "#BE123C");
-                    if (permBtn) {{
-                        permBtn.innerHTML = "🔴 Listening... / ಆಲಿಸಲಾಗುತ್ತಿದೆ";
-                        permBtn.style.background = "#9F1239";
-                    }}
-                }};
-
-                recognition.onresult = function(event) {{
-                    let interimTranscript = '';
-                    let finalTranscript = '';
-                    for (let i = event.resultIndex; i < event.results.length; ++i) {{
-                        if (event.results[i].isFinal) {{
-                            finalTranscript += event.results[i][0].transcript;
-                        }} else {{
-                            interimTranscript += event.results[i][0].transcript;
-                        }}
-                    }}
-                    const heard = (finalTranscript || interimTranscript).trim();
-                    if (heard) {{
-                        updateStatus("🗣️ <b>Heard:</b> \"" + heard + "\"... Navigating...", "#0F172A");
-                    }}
-                    if (finalTranscript.trim().length > 0) {{
-                        const finalQ = finalTranscript.trim();
-                        updateStatus("✅ <b>Recognized:</b> \"" + finalQ + "\"... Opening route...", "#047857");
-                        setTimeout(function() {{
-                            const enc = encodeURIComponent(finalQ);
-                            try {{
-                                if (window.parent && window.parent !== window && window.parent.location) {{
-                                    window.parent.location.search = '?voice_q=' + enc;
-                                    return;
-                                }}
-                            }} catch(e) {{}}
-                            window.location.search = '?voice_q=' + enc;
-                        }}, 250);
-                    }}
-                }};
-
-                recognition.onerror = function(event) {{
-                    console.warn("Speech recognition error:", event.error);
-                    isListening = false;
-                    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {{
-                        updateStatus(
-                            "⚠️ <b>Microphone permission blocked:</b><br>" +
-                            "<span style='font-size:12px; font-weight:500; color:#991B1B; line-height:1.4; display:inline-block; margin-top:4px;'>" +
-                            "1. Click the lock 🔒 or settings icon in your browser address bar.<br>" +
-                            "2. Set <b>Microphone</b> to <b>'Allow'</b>.<br>" +
-                            "3. Click <b>'Start Speaking'</b> below, or tap any quick sample question!</span>",
-                            "#B91C1C"
-                        );
-                        if (permBtn) {{
-                            permBtn.innerHTML = "🎙️ Start Speaking / ಮಾತನಾಡಿ";
-                            permBtn.style.background = "#DC2626";
-                        }}
-                    }} else if (event.error === 'no-speech') {{
-                        updateStatus("⚠️ <b>No speech detected.</b> Click <b>'Speak Again'</b> and speak clearly into your mic.", "#B91C1C");
-                        if (permBtn) {{
-                            permBtn.innerHTML = "🎙️ Speak Again / ಪುನಃ ಮಾತನಾಡಿ";
-                            permBtn.style.background = "#BE123C";
-                        }}
-                    }} else {{
-                        updateStatus("⚠️ <b>Microphone note (" + event.error + "):</b> Tap button to try again, or use quick options below.", "#B91C1C");
-                        if (permBtn) {{
-                            permBtn.innerHTML = "🎙️ Try Again / ಪುನಃ ಪ್ರಯತ್ನಿಸಿ";
-                            permBtn.style.background = "#BE123C";
-                        }}
-                    }}
-                }};
-
-                recognition.onend = function() {{
-                    isListening = false;
-                    if (permBtn) {{
-                        permBtn.innerHTML = "🎙️ Start Speaking / ಮಾತನಾಡಿ";
-                        permBtn.style.background = "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)";
-                    }}
-                }};
-
+          btn.onclick = () => {{
+            if (!active) {{
+              try {{
                 recognition.start();
-            }} catch(e) {{
-                console.error("SpeechRecognition start exception:", e);
-                isListening = false;
-            }}
-        }}
-
-        function triggerMic() {{
-            if (isListening) return;
-            updateStatus("🎙️ <b>Requesting microphone access...</b> Please click <b>'Allow'</b> if prompted.", "#0369A1");
-
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {{
-                navigator.mediaDevices.getUserMedia({{ audio: true }})
-                    .then(function(stream) {{
-                        // CRITICAL: Stop tracks immediately so audio hardware lock is released for recognition!
-                        try {{
-                            stream.getTracks().forEach(function(track) {{ track.stop(); }});
-                        }} catch(e) {{}}
-                        startRecognition();
-                    }})
-                    .catch(function(err) {{
-                        console.warn("getUserMedia error:", err);
-                        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {{
-                            updateStatus(
-                                "⚠️ <b>Microphone permission blocked:</b><br>" +
-                                "<span style='font-size:12px; font-weight:500; color:#991B1B;'>" +
-                                "Click the lock 🔒 icon in the address bar, set Microphone to <b>'Allow'</b>, and tap <b>'Start Speaking'</b> again.</span>",
-                                "#B91C1C"
-                            );
-                        }} else {{
-                            startRecognition();
-                        }}
-                    }});
+              }} catch (e) {{
+                console.warn(e);
+              }}
             }} else {{
-                startRecognition();
+              recognition.stop();
             }}
-        }}
+          }};
 
-        if (permBtn) {{
-            permBtn.onclick = function(e) {{
-                e.preventDefault();
-                triggerMic();
-            }};
+          recognition.onstart = () => {{
+            active = true;
+            btn.textContent = "🔴 Listening...";
+            btn.style.background = "#9F1239";
+            txt.innerHTML = "Listening... Speak clearly now.";
+          }};
+
+          recognition.onresult = (event) => {{
+            let interim = '';
+            let final = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {{
+              if (event.results[i].isFinal) {{
+                final += event.results[i][0].transcript;
+              }} else {{
+                interim += event.results[i][0].transcript;
+              }}
+            }}
+            const spoken = (final || interim).trim();
+            if (spoken) {{
+              txt.innerHTML = "🗣️ <i>" + spoken + "</i>";
+            }}
+            if (final.trim().length > 0) {{
+              const cleanFinal = encodeURIComponent(final.trim());
+              txt.innerHTML = "✅ Processing: <b>" + final.trim() + "</b>...";
+              setTimeout(() => {{
+                try {{
+                  window.top.location.search = '?voice_q=' + cleanFinal;
+                }} catch (e) {{
+                  window.parent.location.search = '?voice_q=' + cleanFinal;
+                }}
+              }}, 300);
+            }}
+          }};
+
+          recognition.onerror = (e) => {{
+            active = false;
+            btn.textContent = "🎙️ Start Speaking";
+            btn.style.background = "#E11D48";
+            if (e.error === 'not-allowed') {{
+              txt.innerHTML = "⚠️ Microphone access was blocked. Please allow mic permissions in your browser.";
+            }} else if (e.error === 'no-speech') {{
+              txt.innerHTML = "⚠️ No speech detected. Click Start to try again.";
+            }} else {{
+              txt.innerHTML = "⚠️ Error: " + e.error;
+            }}
+          }};
+
+          recognition.onend = () => {{
+            active = false;
+            btn.textContent = "🎙️ Start Speaking";
+            btn.style.background = "#E11D48";
+          }};
         }}
-    }})();
-    </script>
-    """, unsafe_allow_javascript=True)
+      </script>
+    </body>
+    </html>
+    """
+
+    components.html(component_html, height=125, scrolling=False)
 
     b_col1, b_col2, b_col3, b_col4, b_col5 = st.columns([1.6, 1.3, 1.4, 1.2, 1.2], gap="small")
     with b_col1:
@@ -642,7 +602,6 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
     with b_col5:
         if st.button("🗣️ \"Repeat\"", key=f"mic_chip_4_{key_suffix}", use_container_width=True):
             handle_voice_query_action("Repeat")
-
 
 # Check URL query param bridge for Web Speech STT transcripts
 if "voice_q" in st.query_params:
