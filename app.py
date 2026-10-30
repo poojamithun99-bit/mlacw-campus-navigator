@@ -571,15 +571,46 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
 
         <div class="quick-chips">
           <span style="font-size:10.5px; color:#9F1239; font-weight:700;">Or tap to navigate:</span>
-          <a class="chip-link" href="?voice_q=Central%20Library" target="_top">📚 Library</a>
-          <a class="chip-link" href="?voice_q=Computer%20Science" target="_top">💻 Computer Science</a>
-          <a class="chip-link" href="?voice_q=Classroom%20G11" target="_top">🏫 Classroom G11</a>
-          <a class="chip-link" href="?voice_q=Girls%20Washroom" target="_top">🚻 Washroom</a>
-          <a class="chip-link" href="?voice_q=Canteen%20Area" target="_top">☕ Canteen</a>
+          <a class="chip-link" href="javascript:void(0)" onclick="navigateTop(event, 'Central Library'); return false;">📚 Library</a>
+          <a class="chip-link" href="javascript:void(0)" onclick="navigateTop(event, 'Dept. of Computer Science & Staff Room'); return false;">💻 Computer Science</a>
+          <a class="chip-link" href="javascript:void(0)" onclick="navigateTop(event, 'Classroom G11'); return false;">🏫 Classroom G11</a>
+          <a class="chip-link" href="javascript:void(0)" onclick="navigateTop(event, 'Girls Washroom'); return false;">🚻 Washroom</a>
+          <a class="chip-link" href="javascript:void(0)" onclick="navigateTop(event, 'Canteen Area'); return false;">☕ Canteen</a>
         </div>
       </div>
 
       <script>
+        window.navigateTop = function(event, query) {{
+          if (event && event.preventDefault) event.preventDefault();
+          const clean = encodeURIComponent(query);
+          let base = "/";
+          try {{
+            if (window.top && window.top.location && window.top.location.origin && window.top.location.origin !== "null") {{
+              base = window.top.location.origin + (window.top.location.pathname || "/");
+            }} else if (window.parent && window.parent.location && window.parent.location.origin && window.parent.location.origin !== "null") {{
+              base = window.parent.location.origin + (window.parent.location.pathname || "/");
+            }}
+          }} catch(e) {{}}
+          const fullUrl = base.replace(/\\/$/, '') + '/?voice_q=' + clean;
+
+          try {{
+            window.top.location.href = fullUrl;
+            return;
+          }} catch(e) {{}}
+          try {{
+            window.parent.location.href = fullUrl;
+            return;
+          }} catch(e) {{}}
+          try {{
+            window.top.location.assign(fullUrl);
+            return;
+          }} catch(e) {{}}
+          try {{
+            window.parent.location.assign(fullUrl);
+            return;
+          }} catch(e) {{}}
+        }};
+
         const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
         const txt = document.getElementById("transcript-text");
         const btn = document.getElementById("listen-toggle");
@@ -632,47 +663,20 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
               const cleanFinal = encodeURIComponent(final.trim());
               const displayText = final.trim();
               
-              // Provide an immediate 1-click action button inside the card so user is never blocked
+              // Provide an immediate 1-click action button inside the card with verified click handler
               txt.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">
                   <span style="color:#0F172A; font-weight:700; font-size:13px;">🗣️ "${{displayText}}"</span>
-                  <a id="btn-voice-proceed" class="nav-action-btn" href="?voice_q=${{cleanFinal}}" target="_top">
+                  <a id="btn-voice-proceed" class="nav-action-btn" href="javascript:void(0)" onclick="navigateTop(event, '${{displayText}}'); return false;">
                     <span>🚀 Navigate</span> ➔
                   </a>
                 </div>
               `;
 
-              // Trigger multi-pathway navigation automatically
+              // Automatically navigate after brief visual confirmation
               setTimeout(() => {{
-                // 1. Direct top anchor click (highest browser compatibility across sandboxes)
-                const proceedBtn = document.getElementById("btn-voice-proceed");
-                if (proceedBtn) {{
-                  try {{ proceedBtn.click(); }} catch(e) {{}}
-                }}
-
-                // 2. Direct top location assignment
-                try {{
-                  const targetUrl = (window.top.location.pathname || "/") + '?voice_q=' + cleanFinal;
-                  window.top.location.href = targetUrl;
-                  return;
-                }} catch (e) {{}}
-
-                // 3. Direct parent location assignment
-                try {{
-                  const targetUrl = (window.parent.location.pathname || "/") + '?voice_q=' + cleanFinal;
-                  window.parent.location.href = targetUrl;
-                  return;
-                }} catch (e) {{}}
-
-                // 4. Fallback search setter
-                try {{
-                  window.top.location.search = '?voice_q=' + cleanFinal;
-                }} catch (e) {{
-                  try {{
-                    window.parent.location.search = '?voice_q=' + cleanFinal;
-                  }} catch (e2) {{}}
-                }}
-              }}, 350);
+                navigateTop(null, displayText);
+              }}, 300);
             }}
           }};
 
@@ -827,7 +831,7 @@ def render_floor_directory_component(key_suffix: str = "main"):
 
     col_act_a, col_act_b = st.columns(2, gap="small")
     with col_act_a:
-        if st.button(f"🎯 {t['btn_set_dest']} & Start Guidance ➔", key=f"btn_showcase_dest_{key_suffix}", type="primary", use_container_width=True):
+        if st.button(f"🧭 Navigate to {featured_room} ➔", key=f"btn_showcase_dest_{key_suffix}", type="primary", use_container_width=True):
             set_route_endpoint(featured_room, "destination")
     with col_act_b:
         if st.button(f"🚩 {t['btn_set_orig']} & Start Guidance ➔", key=f"btn_showcase_orig_{key_suffix}", use_container_width=True):
@@ -1276,7 +1280,7 @@ elif cur_step == 2:
             if v_ans_audio:
                 st.audio(v_ans_audio, format="audio/mp3", autoplay=True)
 
-        v_in_col1, v_in_col2 = st.columns([4, 1.2], gap="small")
+        v_in_col1, v_in_col2, v_in_col3 = st.columns([3.4, 1.4, 1.2], gap="small")
         with v_in_col1:
             v_user_query = st.text_input(
                 "Ask Voice Assistant:",
@@ -1285,16 +1289,21 @@ elif cur_step == 2:
                 label_visibility="collapsed"
             )
         with v_in_col2:
-            v_ask_triggered = st.button("🎙️ Speak / ಕೇಳಿ", key="stage2_voice_submit_btn", type="primary", use_container_width=True)
+            v_nav_btn = st.button("🧭 Navigate ➔", key="btn_voice_nav_action", type="primary", use_container_width=True)
+        with v_in_col3:
+            v_mic_toggle = st.button("🎙️ Mic / ಕೇಳಿ", key="stage2_voice_submit_btn", use_container_width=True)
 
         mic_permission_tips = {
-            "English": "🎙️ **Microphone Voice Search:** Tap **'🎙️ Speak / ಕೇಳಿ'** to speak. When your browser requests permission, click **'Allow'** to let the assistant listen.",
-            "Kannada": "🎙️ **ಧ್ವನಿ ಹುಡುಕಾಟ:** ಮಾತನಾಡಲು **'🎙️ Speak / ಕೇಳಿ'** ಕ್ಲಿಕ್ ಮಾಡಿ. ಬ್ರೌಸರ್ ಅನುಮತಿ ಕೇಳಿದಾಗ ಮೈಕ್ರೊಫೋನ್‌ಗಾಗಿ **'Allow'** ಆಯ್ಕೆಮಾಡಿ.",
-            "Hindi": "🎙️ **वॉयस सर्च:** बोलने के लिए **'🎙️ Speak / ಕೇಳಿ'** पर क्लिक करें। ब्राउज़र पूछे जाने पर माइक्रोफ़ोन के लिए **'Allow'** चुनें।"
+            "English": "🎙️ **Microphone Voice Search:** Tap **'🎙️ Mic / ಕೇಳಿ'** to speak, or type and tap **'🧭 Navigate ➔'** to get directions immediately.",
+            "Kannada": "🎙️ **ಧ್ವನಿ ಹುಡುಕಾಟ:** ಮಾತನಾಡಲು **'🎙️ Mic / ಕೇಳಿ'** ಕ್ಲಿಕ್ ಮಾಡಿ, ಅಥವಾ ಟೈಪ್ ಮಾಡಿ **'🧭 Navigate ➔'** ಕ್ಲಿಕ್ ಮಾಡಿ.",
+            "Hindi": "🎙️ **वॉयस सर्च:** बोलने के लिए **'🎙️ Mic / ಕೇಳಿ'** दबाएं, या लिखकर **'🧭 Navigate ➔'** दबाएं।"
         }
         st.caption(mic_permission_tips.get(active_lang, mic_permission_tips["English"]))
 
-        if v_ask_triggered:
+        if v_nav_btn:
+            target_to_nav = v_user_query.strip() if (v_user_query and v_user_query.strip()) else st.session_state.get("target_destination", "Central Library")
+            handle_voice_query_action(target_to_nav)
+        elif v_mic_toggle:
             if v_user_query and v_user_query.strip():
                 handle_voice_query_action(v_user_query.strip())
             else:
@@ -1417,7 +1426,7 @@ elif cur_step == 2:
 
                 act_s2_col1, act_s2_col2 = st.columns(2, gap="small")
                 with act_s2_col1:
-                    if st.button(f"🎯 {t['btn_set_dest']} & Start Guidance ➔", key="btn_search_start_nav", type="primary", use_container_width=True):
+                    if st.button(f"🧭 Navigate to {m_target} ➔", key="btn_search_start_nav", type="primary", use_container_width=True):
                         set_route_endpoint(m_target, "destination")
                 with act_s2_col2:
                     if st.button(f"🚩 {t['btn_set_orig']} & Start Guidance ➔", key="btn_search_set_start", use_container_width=True):
