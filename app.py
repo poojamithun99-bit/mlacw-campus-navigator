@@ -534,17 +534,29 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
         </div>
       </div>
 
-      <!-- Standard Form targeting _top: Never blocked by browser iframe sandboxes -->
-      <form id="voice-nav-form" method="GET" target="_top" style="display:none;">
-        <input type="hidden" name="voice_q" id="voice-nav-input" value="" />
-      </form>
-
       <script>
         const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
         const txt = document.getElementById("transcript-text");
         const btn = document.getElementById("listen-toggle");
-        const form = document.getElementById("voice-nav-form");
-        const formInput = document.getElementById("voice-nav-input");
+
+        function redirectParent(query) {{
+          const encoded = encodeURIComponent(query);
+          try {{
+            if (window.top && window.top.location) {{
+              window.top.location.search = '?voice_q=' + encoded;
+              return;
+            }}
+          }} catch (e) {{}}
+
+          try {{
+            if (window.parent && window.parent.location) {{
+              window.parent.location.search = '?voice_q=' + encoded;
+              return;
+            }}
+          }} catch (e) {{}}
+
+          window.location.search = '?voice_q=' + encoded;
+        }}
 
         if (!SpeechClass) {{
           txt.innerHTML = "⚠️ Speech recognition is not supported in this browser. Please use Chrome or Edge.";
@@ -594,12 +606,10 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
               txt.innerHTML = "✅ Moving to active wayfinding: <b>" + cleanFinal + "</b>...";
               txt.style.color = "#15803D";
               btn.style.display = "none";
-              
-              // Submit form targeting top frame
+
               setTimeout(() => {{
-                formInput.value = cleanFinal;
-                form.submit();
-              }}, 300);
+                redirectParent(cleanFinal);
+              }}, 200);
             }}
           }};
 
