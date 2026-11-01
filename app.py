@@ -479,100 +479,303 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
     <!DOCTYPE html>
     <html>
     <head>
+    <meta charset="utf-8">
     <style>
-      body {{
+      * {{
+        box-sizing: border-box;
         margin: 0;
+        padding: 0;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       }}
+      body {{
+        background: transparent;
+        overflow: hidden;
+        padding: 2px;
+      }}
       .mic-box {{
-        background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
+        background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 55%, #FECDD3 100%);
         border: 2px solid #E11D48;
         border-radius: 12px;
-        padding: 14px 18px;
-        box-sizing: border-box;
+        padding: 10px 14px;
+        box-shadow: 0 4px 14px rgba(225, 29, 72, 0.14);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
       }}
       .mic-status-row {{
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
+      }}
+      .status-left {{
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }}
       .pulse-indicator {{
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        height: 20px;
+        gap: 3px;
+        height: 18px;
       }}
       .pulse-bar {{
-        width: 4px;
+        width: 3.5px;
         height: 100%;
         background: #E11D48;
         border-radius: 2px;
-        animation: pulse 0.8s ease-in-out infinite alternate;
+        animation: pulseAnim 0.75s ease-in-out infinite alternate;
       }}
-      .pulse-bar:nth-child(2) {{ animation-delay: 0.2s; }}
-      .pulse-bar:nth-child(3) {{ animation-delay: 0.4s; }}
-      @keyframes pulse {{
-        0% {{ height: 30%; }}
-        100% {{ height: 100%; }}
+      .pulse-bar:nth-child(2) {{ animation-delay: 0.15s; }}
+      .pulse-bar:nth-child(3) {{ animation-delay: 0.3s; }}
+      .pulse-bar:nth-child(4) {{ animation-delay: 0.45s; }}
+      @keyframes pulseAnim {{
+        0% {{ height: 25%; opacity: 0.5; }}
+        100% {{ height: 100%; opacity: 1; }}
+      }}
+      .brand-title {{
+        font-weight: 800;
+        color: #9F1239;
+        font-size: 13.5px;
+        letter-spacing: 0.4px;
+      }}
+      .brand-subtitle {{
+        font-size: 11px;
+        color: #BE123C;
+        font-weight: 600;
+      }}
+      .lang-badge {{
+        font-size: 11px;
+        font-weight: 700;
+        color: #9F1239;
+        background: #FFFFFF;
+        border: 1px solid #FECDD3;
+        padding: 3px 8px;
+        border-radius: 12px;
+        white-space: nowrap;
+        box-shadow: 0 1px 3px rgba(225, 29, 72, 0.08);
       }}
       #transcript-view {{
-        margin-top: 10px;
         background: #FFFFFF;
         border: 1.5px dashed #F43F5E;
         border-radius: 8px;
-        padding: 10px 14px;
-        font-size: 14px;
+        padding: 8px 12px;
+        font-size: 13.5px;
         color: #0F172A;
-        min-height: 40px;
+        min-height: 42px;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 10px;
+      }}
+      #transcript-text {{
+        color: #0369A1;
+        font-weight: 600;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }}
+      .btn-container {{
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
       }}
       .mic-btn {{
         background: #E11D48;
         color: #FFFFFF;
         border: none;
         border-radius: 6px;
-        padding: 8px 16px;
+        padding: 7px 14px;
         font-weight: 700;
-        font-size: 13px;
+        font-size: 12.5px;
         cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        box-shadow: 0 1px 4px rgba(225, 29, 72, 0.25);
+        transition: all 0.15s ease;
       }}
       .mic-btn:hover {{
         background: #BE123C;
+      }}
+      .nav-btn {{
+        background: #0284C7;
+        color: #FFFFFF !important;
+        border: none;
+        border-radius: 6px;
+        padding: 7px 15px;
+        font-weight: 800;
+        font-size: 13px;
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        gap: 5px;
+        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+        transition: all 0.15s ease;
+      }}
+      .nav-btn:hover {{
+        background: #0369A1;
+        transform: translateY(-1px);
+      }}
+      .chips-row {{
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 1px;
+      }}
+      .chips-label {{
+        font-size: 11px;
+        color: #9F1239;
+        font-weight: 700;
+        margin-right: 2px;
+      }}
+      .chip-link {{
+        background: #FFFFFF;
+        border: 1px solid #FECDD3;
+        color: #9F1239;
+        padding: 2.5px 9px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        transition: all 0.15s ease;
+      }}
+      .chip-link:hover {{
+        background: #FFE4E6;
+        border-color: #E11D48;
+        transform: translateY(-1px);
       }}
     </style>
     </head>
     <body>
       <div class="mic-box">
         <div class="mic-status-row">
-          <div style="display:flex; align-items:center; gap:8px;">
+          <div class="status-left">
             <div class="pulse-indicator">
+              <div class="pulse-bar"></div>
               <div class="pulse-bar"></div>
               <div class="pulse-bar"></div>
               <div class="pulse-bar"></div>
             </div>
             <div>
-              <span style="font-weight:800; color:#9F1239; font-size:14px;">🔴 VOICE ASSISTANT LISTENING</span>
-              <div style="font-size:11px; color:#BE123C;">ಧ್ವನಿ ಆಲಿಸಲಾಗುತ್ತಿದೆ • बोलें, सिस्टम सुन रहा है...</div>
+              <span class="brand-title">🔴 VOICE ASSISTANT LISTENING</span>
+              <span class="brand-subtitle" style="margin-left:6px;">ಧ್ವನಿ ಆಲಿಸಲಾಗುತ್ತಿದೆ • बोलें, सिस्टम सुन रहा है...</span>
             </div>
           </div>
-          <div style="font-size:11px; font-weight:700; color:#9F1239; background:#FFE4E6; border:1px solid #FECDD3; padding:4px 8px; border-radius:12px;">
+          <div class="lang-badge">
             Lang: {lang_code}
           </div>
         </div>
 
         <div id="transcript-view">
-          <span id="transcript-text" style="color:#0369A1; font-weight:600;">🎙️ Click 'Start Speaking' and say your destination...</span>
-          <button class="mic-btn" id="listen-toggle">🎙️ Start Speaking</button>
+          <span id="transcript-text">🎙️ Click 'Start Speaking' and say your destination...</span>
+          <div class="btn-container">
+            <button class="nav-btn" id="btn-voice-nav" onclick="triggerNavAction()">🚀 Navigate ➔</button>
+            <button class="mic-btn" id="listen-toggle">🎙️ Start Speaking</button>
+          </div>
+        </div>
+
+        <div class="chips-row">
+          <span class="chips-label">Or tap to navigate:</span>
+          <a class="chip-link" href="javascript:void(0)" onclick="navigateTop('Central Library'); return false;">📚 Library</a>
+          <a class="chip-link" href="javascript:void(0)" onclick="navigateTop('Dept. of Computer Science & Staff Room'); return false;">💻 Computer Science</a>
+          <a class="chip-link" href="javascript:void(0)" onclick="navigateTop('Classroom G11'); return false;">🏫 Classroom G11</a>
+          <a class="chip-link" href="javascript:void(0)" onclick="navigateTop('Girls Washroom'); return false;">🚻 Washroom</a>
+          <a class="chip-link" href="javascript:void(0)" onclick="navigateTop('Canteen Area'); return false;">☕ Canteen</a>
         </div>
       </div>
 
       <script>
+        // Attach listener to parent window if not yet registered
+        try {{
+          if (window.parent && !window.parent._mlacwVoiceNavAttached) {{
+            window.parent._mlacwVoiceNavAttached = true;
+            window.parent.addEventListener('message', function(event) {{
+              if (event && event.data && (event.data.type === 'VOICE_NAV' || event.data.voice_q)) {{
+                var q = event.data.query || event.data.voice_q;
+                if (q && typeof q === 'string' && q.trim().length > 0) {{
+                  var base = window.parent.location.origin + window.parent.location.pathname;
+                  if (base.endsWith('/')) base = base.slice(0, -1);
+                  window.parent.location.href = base + '/?voice_q=' + encodeURIComponent(q.trim());
+                }}
+              }}
+            }});
+          }}
+        }} catch(e) {{}}
+
+        let recognizedDestination = "";
+
+        function navigateTop(dest) {{
+          if (!dest || !dest.trim()) return;
+          const cleanQ = dest.trim();
+
+          const navBtn = document.getElementById("btn-voice-nav");
+          const txt = document.getElementById("transcript-text");
+          if (navBtn) {{
+            navBtn.style.display = "inline-flex";
+            navBtn.innerHTML = "<span>⏳ Navigating...</span>";
+            navBtn.style.background = "#15803D";
+            navBtn.style.pointerEvents = "none";
+          }}
+          if (txt) {{
+            txt.innerHTML = "✅ Navigating to: <b>" + cleanQ + "</b>...";
+            txt.style.color = "#15803D";
+          }}
+
+          // Channel 1: postMessage to window.parent
+          try {{
+            if (window.parent) {{
+              window.parent.postMessage({{ type: 'VOICE_NAV', query: cleanQ, voice_q: cleanQ }}, '*');
+            }}
+          }} catch(e) {{}}
+
+          // Channel 2: postMessage to window.top
+          try {{
+            if (window.top) {{
+              window.top.postMessage({{ type: 'VOICE_NAV', query: cleanQ, voice_q: cleanQ }}, '*');
+            }}
+          }} catch(e) {{}}
+
+          // Channel 3: Inject dynamic script into parent document
+          try {{
+            if (window.parent && window.parent.document && window.parent.document.body) {{
+              const scr = window.parent.document.createElement('script');
+              scr.textContent = 'window.location.search = "?voice_q=" + ' + JSON.stringify(cleanQ) + ';';
+              window.parent.document.body.appendChild(scr);
+            }}
+          }} catch(e) {{}}
+
+          // Channel 4: Direct assignment fallback
+          setTimeout(function() {{
+            try {{
+              if (window.parent && window.parent.location) {{
+                window.parent.location.search = '?voice_q=' + encodeURIComponent(cleanQ);
+              }}
+            }} catch(e) {{
+              try {{
+                window.top.location.search = '?voice_q=' + encodeURIComponent(cleanQ);
+              }} catch(e2) {{}}
+            }}
+          }}, 300);
+        }}
+
+        function triggerNavAction() {{
+          if (recognizedDestination) {{
+            navigateTop(recognizedDestination);
+          }}
+        }}
+
         const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
         const txt = document.getElementById("transcript-text");
         const btn = document.getElementById("listen-toggle");
+        const navBtn = document.getElementById("btn-voice-nav");
 
         if (!SpeechClass) {{
           txt.innerHTML = "⚠️ Speech Recognition is not supported in this browser. Please use Chrome or Edge.";
@@ -601,7 +804,8 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
             active = true;
             btn.textContent = "🔴 Listening...";
             btn.style.background = "#9F1239";
-            txt.innerHTML = "Listening... Speak clearly now.";
+            txt.innerHTML = "Listening... Speak your destination clearly now.";
+            txt.style.color = "#BE123C";
           }};
 
           recognition.onresult = (event) => {{
@@ -616,33 +820,20 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
             }}
             const spoken = (final || interim).trim();
             if (spoken) {{
-              txt.innerHTML = "🗣️ <i>" + spoken + "</i>";
+              txt.innerHTML = "🗣️ <b>\"" + spoken + "\"</b>";
+              txt.style.color = "#0F172A";
             }}
             if (final.trim().length > 0) {{
-              const cleanFinal = encodeURIComponent(final.trim());
-              txt.innerHTML = "✅ Processing: <b>" + final.trim() + "</b>...";
+              recognizedDestination = final.trim();
+              btn.style.display = "none";
+              navBtn.style.display = "inline-flex";
+              txt.innerHTML = "🗣️ <b>\"" + recognizedDestination + "\"</b>";
+              txt.style.color = "#0F172A";
+
+              // Automatically navigate after 800ms visual confirmation
               setTimeout(() => {{
-                try {{
-                  if (window.parent) window.parent.postMessage({{ type: 'VOICE_NAV', query: final.trim() }}, '*');
-                }} catch (e) {{}}
-                try {{
-                  if (window.top) window.top.postMessage({{ type: 'VOICE_NAV', query: final.trim() }}, '*');
-                }} catch (e) {{}}
-                try {{
-                  if (window.parent && window.parent.document && window.parent.document.body) {{
-                    const scr = window.parent.document.createElement('script');
-                    scr.textContent = 'window.location.search = "?voice_q=" + ' + JSON.stringify(cleanFinal) + ';';
-                    window.parent.document.body.appendChild(scr);
-                  }}
-                }} catch (e) {{}}
-                try {{
-                  window.top.location.search = '?voice_q=' + cleanFinal;
-                }} catch (e) {{
-                  try {{
-                    window.parent.location.search = '?voice_q=' + cleanFinal;
-                  }} catch (e2) {{}}
-                }}
-              }}, 300);
+                navigateTop(recognizedDestination);
+              }}, 800);
             }}
           }};
 
@@ -661,8 +852,10 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
 
           recognition.onend = () => {{
             active = false;
-            btn.textContent = "🎙️ Start Speaking";
-            btn.style.background = "#E11D48";
+            if (!recognizedDestination) {{
+              btn.textContent = "🎙️ Start Speaking";
+              btn.style.background = "#E11D48";
+            }}
           }};
         }}
       </script>
@@ -670,7 +863,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
     </html>
     """
 
-    components.html(component_html, height=125, scrolling=False)
+    components.html(component_html, height=148, scrolling=False)
 
     b_col1, b_col2, b_col3, b_col4, b_col5 = st.columns([1.6, 1.3, 1.4, 1.2, 1.2], gap="small")
     with b_col1:
@@ -1205,47 +1398,227 @@ elif cur_step == 2:
         if st.session_state.get("voice_assistant_response"):
             v_ans_text, v_ans_lang, v_ans_audio = st.session_state["voice_assistant_response"]
             v_lang_code = {"Kannada": "kn-IN", "Hindi": "hi-IN", "English": "en-IN"}.get(v_ans_lang, "en-IN")
+            if not v_ans_audio:
+                v_ans_audio = generate_step_audio(v_ans_text, v_ans_lang)
+            b64_ans_audio = base64.b64encode(v_ans_audio).decode('ascii') if v_ans_audio else ""
             escaped_v_ans = json.dumps(v_ans_text)
-            render_html(f"""
-            <div style="background:linear-gradient(135deg, #F0F9FF, #E0F2FE); border:2px solid #0284C7; border-radius:12px; padding:14px 18px; margin-bottom:16px; box-shadow:0 3px 10px rgba(2,132,199,0.12);">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="color:#0284C7;">{get_svg_icon('speaker', size=20, color='#0284C7')}</span>
-                        <span style="font-size:13px; font-weight:800; color:#0369A1; text-transform:uppercase;">
-                            Spoken Response ({v_ans_lang})
-                        </span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <button type="button" onclick="window.mlacwSpeakAns()" style="background:#0284C7; color:#FFFFFF; border:none; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 1px 4px rgba(2,132,199,0.25);">
-                            {get_svg_icon('play', size=12, color='#FFFFFF', filled=True)}
-                            <span>Listen Aloud / ಧ್ವನಿ ಕೇಳಿ</span>
-                        </button>
-                        {icon_badge('speaker', 'Vocal Answer Ready', bg='#FFFFFF', color='#0284C7', border='#BAE6FD', size=12)}
-                    </div>
+
+            stage2_confirm_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <meta charset="utf-8">
+            <style>
+              * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }}
+              body {{ background: transparent; overflow: hidden; padding: 2px; }}
+              .confirm-card {{
+                background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+                border: 1.8px solid #0284C7;
+                border-radius: 12px;
+                padding: 11px 16px;
+                box-shadow: 0 3px 10px rgba(2, 132, 199, 0.12);
+                display: flex;
+                flex-direction: column;
+                gap: 7px;
+              }}
+              .confirm-header {{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 8px;
+              }}
+              .title-group {{
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              }}
+              .title-text {{
+                font-size: 12px;
+                font-weight: 800;
+                color: #0369A1;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              }}
+              .badge-activated {{
+                font-size: 11px;
+                font-weight: 700;
+                color: #0284C7;
+                background: #FFFFFF;
+                border: 1px solid #BAE6FD;
+                padding: 2px 8px;
+                border-radius: 10px;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+              }}
+              .actions-group {{
+                display: flex;
+                align-items: center;
+                gap: 6px;
+              }}
+              .btn-audio-action {{
+                background: #0284C7;
+                color: #FFFFFF !important;
+                border: none;
+                border-radius: 6px;
+                padding: 6px 14px;
+                font-size: 12px;
+                font-weight: 700;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                box-shadow: 0 1px 4px rgba(2, 132, 199, 0.25);
+                transition: all 0.15s ease;
+              }}
+              .btn-audio-action:hover {{ background: #0369A1; transform: translateY(-1px); }}
+              .btn-audio-action:active {{ transform: translateY(1px); }}
+              .btn-audio-action.playing {{ background: #D97706 !important; }}
+              .btn-stop-action {{
+                background: #FFFFFF;
+                color: #475569;
+                border: 1px solid #CBD5E1;
+                border-radius: 6px;
+                padding: 6px 10px;
+                font-size: 12px;
+                font-weight: 700;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                transition: all 0.15s ease;
+              }}
+              .btn-stop-action:hover {{ background: #F1F5F9; color: #0F172A; }}
+              .quote-text {{
+                font-size: 13.5px;
+                font-weight: 700;
+                color: #0F172A;
+                line-height: 1.45;
+              }}
+            </style>
+            </head>
+            <body>
+              <div class="confirm-card">
+                <div class="confirm-header">
+                  <div class="title-group">
+                    <span style="color:#0284C7; font-size:15px;">🔊</span>
+                    <span class="title-text">Spoken Response ({v_ans_lang})</span>
+                    <span class="badge-activated">✓ Vocal Response Ready</span>
+                  </div>
+                  <div class="actions-group">
+                    <button type="button" class="btn-audio-action" id="btn-s2-play" onclick="toggleS2Audio()">
+                      <span id="s2-icon">▶</span>
+                      <span id="s2-label">Listen Aloud / ಧ್ವನಿ ಕೇಳಿ</span>
+                    </button>
+                    <button type="button" class="btn-stop-action" onclick="stopS2Audio()">
+                      <span>⏹</span> Stop
+                    </button>
+                  </div>
                 </div>
-                <div style="font-size:15px; font-weight:700; color:#0F172A; line-height:1.5; margin-bottom:6px;">
-                    "{v_ans_text}"
+                <div class="quote-text">
+                  "{v_ans_text}"
                 </div>
-            </div>
-            <script>
-            window.mlacwSpeakAns = function() {{
-                const synth = window.speechSynthesis;
-                if (!synth) return;
-                synth.cancel();
-                synth.resume();
-                const u = new SpeechSynthesisUtterance({escaped_v_ans});
-                u.lang = '{v_lang_code}';
-                u.rate = 0.95;
-                const voices = synth.getVoices() || [];
-                const prefix = '{v_lang_code}'.split('-')[0].toLowerCase();
-                const matched = voices.find(v => v.lang && (v.lang.toLowerCase() === '{v_lang_code}'.toLowerCase() || v.lang.toLowerCase().startsWith(prefix)));
-                if (matched) u.voice = matched;
-                synth.speak(u);
-            }};
-            </script>
-            """)
-            if v_ans_audio:
-                st.audio(v_ans_audio, format="audio/mp3", autoplay=True)
+              </div>
+
+              <script>
+                const b64Data = "{b64_ans_audio}";
+                const textToSpeak = {escaped_v_ans};
+                const langCode = "{v_lang_code}";
+                let activeAudio = null;
+                let isPlaying = false;
+
+                function resetS2UI() {{
+                  isPlaying = false;
+                  const btn = document.getElementById("btn-s2-play");
+                  const icon = document.getElementById("s2-icon");
+                  const label = document.getElementById("s2-label");
+                  if (btn) btn.classList.remove("playing");
+                  if (icon) icon.innerText = "▶";
+                  if (label) label.innerText = "Listen Aloud / ಧ್ವನಿ ಕೇಳಿ";
+                }}
+
+                function toggleS2Audio() {{
+                  if (isPlaying) {{
+                    stopS2Audio();
+                    return;
+                  }}
+                  playS2Audio();
+                }}
+
+                function playS2Audio() {{
+                  stopS2Audio();
+                  isPlaying = true;
+                  const btn = document.getElementById("btn-s2-play");
+                  const icon = document.getElementById("s2-icon");
+                  const label = document.getElementById("s2-label");
+                  if (btn) btn.classList.add("playing");
+                  if (icon) icon.innerText = "⏸";
+                  if (label) label.innerText = "Pause / ವಿರಾಮ";
+
+                  if (b64Data && b64Data.length > 50) {{
+                    try {{
+                      activeAudio = new Audio("data:audio/mp3;base64," + b64Data);
+                      activeAudio.onended = () => resetS2UI();
+                      activeAudio.onerror = (e) => fallbackS2Speech();
+                      const p = activeAudio.play();
+                      if (p !== undefined) {{
+                        p.catch(e => fallbackS2Speech());
+                      }}
+                      return;
+                    }} catch(err) {{
+                      fallbackS2Speech();
+                      return;
+                    }}
+                  }}
+                  fallbackS2Speech();
+                }}
+
+                function fallbackS2Speech() {{
+                  const synth = (window.parent && window.parent.speechSynthesis) ? window.parent.speechSynthesis : window.speechSynthesis;
+                  if (!synth) {{
+                    resetS2UI();
+                    return;
+                  }}
+                  try {{
+                    synth.cancel();
+                    synth.resume();
+                    const u = new SpeechSynthesisUtterance(textToSpeak);
+                    u.lang = langCode;
+                    u.rate = 0.95;
+                    const voices = synth.getVoices() || [];
+                    const prefix = langCode.split('-')[0].toLowerCase();
+                    const match = voices.find(v => v.lang && (v.lang.toLowerCase() === langCode.toLowerCase() || v.lang.toLowerCase().startsWith(prefix)));
+                    if (match) u.voice = match;
+                    u.onend = () => resetS2UI();
+                    u.onerror = () => resetS2UI();
+                    synth.speak(u);
+                  }} catch(err) {{
+                    resetS2UI();
+                  }}
+                }}
+
+                function stopS2Audio() {{
+                  if (activeAudio) {{
+                    try {{ activeAudio.pause(); activeAudio.currentTime = 0; }} catch(e) {{}}
+                    activeAudio = null;
+                  }}
+                  const synth = (window.parent && window.parent.speechSynthesis) ? window.parent.speechSynthesis : window.speechSynthesis;
+                  if (synth) {{
+                    try {{ synth.cancel(); }} catch(e) {{}}
+                  }}
+                  resetS2UI();
+                }}
+
+                // Optional auto-play
+                try {{
+                  playS2Audio();
+                }} catch(e) {{}}
+              </script>
+            </body>
+            </html>
+            """
+            components.html(stage2_confirm_html, height=105, scrolling=False)
 
         v_in_col1, v_in_col2, v_in_col3 = st.columns([3.4, 1.4, 1.2], gap="small")
         with v_in_col1:
@@ -1614,7 +1987,7 @@ else:
             background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
             border: 1.8px solid #0284C7;
             border-radius: 12px;
-            padding: 12px 16px;
+            padding: 11px 16px;
             box-shadow: 0 3px 10px rgba(2, 132, 199, 0.12);
             display: flex;
             flex-direction: column;
@@ -1724,16 +2097,8 @@ else:
             const b64Data = "{b64_ans_audio}";
             const textToSpeak = {escaped_v_ans};
             const langCode = "{v_lang_code}";
-            let audioObj = null;
+            let activeAudio = null;
             let isPlaying = false;
-
-            if (b64Data && b64Data.length > 50) {{
-              try {{
-                audioObj = new Audio("data:audio/mp3;base64," + b64Data);
-                audioObj.onended = () => resetConfUI();
-                audioObj.onerror = () => audioObj = null;
-              }} catch(e) {{ audioObj = null; }}
-            }}
 
             function resetConfUI() {{
               isPlaying = false;
@@ -1763,55 +2128,69 @@ else:
               if (icon) icon.innerText = "⏸";
               if (label) label.innerText = "Pause / ವಿರಾಮ";
 
-              if (audioObj) {{
-                audioObj.currentTime = 0;
-                audioObj.play().catch(e => {{
+              if (b64Data && b64Data.length > 50) {{
+                try {{
+                  activeAudio = new Audio("data:audio/mp3;base64," + b64Data);
+                  activeAudio.onended = () => resetConfUI();
+                  activeAudio.onerror = (e) => fallbackConfSpeech();
+                  const p = activeAudio.play();
+                  if (p !== undefined) {{
+                    p.catch(e => fallbackConfSpeech());
+                  }}
+                  return;
+                }} catch(err) {{
                   fallbackConfSpeech();
-                }});
-              }} else {{
-                fallbackConfSpeech();
+                  return;
+                }}
               }}
+              fallbackConfSpeech();
             }}
 
             function fallbackConfSpeech() {{
-              if (!window.speechSynthesis) return;
+              const synth = (window.parent && window.parent.speechSynthesis) ? window.parent.speechSynthesis : window.speechSynthesis;
+              if (!synth) {{
+                resetConfUI();
+                return;
+              }}
               try {{
-                window.speechSynthesis.cancel();
-                window.speechSynthesis.resume();
+                synth.cancel();
+                synth.resume();
                 const u = new SpeechSynthesisUtterance(textToSpeak);
                 u.lang = langCode;
                 u.rate = 0.95;
-                const voices = window.speechSynthesis.getVoices() || [];
+                const voices = synth.getVoices() || [];
                 const prefix = langCode.split('-')[0].toLowerCase();
                 const match = voices.find(v => v.lang && (v.lang.toLowerCase() === langCode.toLowerCase() || v.lang.toLowerCase().startsWith(prefix)));
                 if (match) u.voice = match;
                 u.onend = () => resetConfUI();
                 u.onerror = () => resetConfUI();
-                window.speechSynthesis.speak(u);
+                synth.speak(u);
               }} catch(err) {{
                 resetConfUI();
               }}
             }}
 
             function stopConfAudio() {{
-              if (audioObj) {{
-                try {{ audioObj.pause(); audioObj.currentTime = 0; }} catch(e) {{}}
+              if (activeAudio) {{
+                try {{ activeAudio.pause(); activeAudio.currentTime = 0; }} catch(e) {{}}
+                activeAudio = null;
               }}
-              if (window.speechSynthesis) {{
-                try {{ window.speechSynthesis.cancel(); }} catch(e) {{}}
+              const synth = (window.parent && window.parent.speechSynthesis) ? window.parent.speechSynthesis : window.speechSynthesis;
+              if (synth) {{
+                try {{ synth.cancel(); }} catch(e) {{}}
               }}
               resetConfUI();
             }}
 
-            // Auto-play immediately on load
-            setTimeout(() => {{
+            // Auto-play immediately on load if browser permits
+            try {{
               playConfAudio();
-            }}, 200);
+            }} catch(e) {{}}
           </script>
         </body>
         </html>
         """
-        components.html(confirm_component_html, height=105, scrolling=False)
+        components.html(confirm_component_html, height=108, scrolling=False)
 
     # Suggested / Alternative Destinations from Voice Query (Interactive 1-Click Options)
     if st.session_state.get("suggested_destinations"):
@@ -2253,16 +2632,8 @@ else:
             const langCode = "{step_lang_code}";
             const autoPlayOnLoad = {auto_play_js};
 
-            let audioObj = null;
+            let activeAudio = null;
             let isPlaying = false;
-
-            if (b64Audio && b64Audio.length > 50) {{
-              try {{
-                audioObj = new Audio("data:audio/mp3;base64," + b64Audio);
-                audioObj.onended = () => resetGuideUI();
-                audioObj.onerror = () => audioObj = null;
-              }} catch(e) {{ audioObj = null; }}
-            }}
 
             function resetGuideUI() {{
               isPlaying = false;
@@ -2302,42 +2673,56 @@ else:
               if (wave) wave.classList.add("active");
               if (status) status.innerText = "🔊 Speaking checkpoint directions...";
 
-              if (audioObj) {{
-                audioObj.currentTime = 0;
-                audioObj.play().catch(e => {{
+              if (b64Audio && b64Audio.length > 50) {{
+                try {{
+                  activeAudio = new Audio("data:audio/mp3;base64," + b64Audio);
+                  activeAudio.onended = () => resetGuideUI();
+                  activeAudio.onerror = (e) => fallbackGuideSpeech();
+                  const p = activeAudio.play();
+                  if (p !== undefined) {{
+                    p.catch(e => fallbackGuideSpeech());
+                  }}
+                  return;
+                }} catch(err) {{
                   fallbackGuideSpeech();
-                }});
-              }} else {{
-                fallbackGuideSpeech();
+                  return;
+                }}
               }}
+              fallbackGuideSpeech();
             }}
 
             function fallbackGuideSpeech() {{
-              if (!window.speechSynthesis) return;
+              const synth = (window.parent && window.parent.speechSynthesis) ? window.parent.speechSynthesis : window.speechSynthesis;
+              if (!synth) {{
+                resetGuideUI();
+                return;
+              }}
               try {{
-                window.speechSynthesis.cancel();
-                window.speechSynthesis.resume();
+                synth.cancel();
+                synth.resume();
                 const u = new SpeechSynthesisUtterance(stepText);
                 u.lang = langCode;
                 u.rate = 0.95;
-                const voices = window.speechSynthesis.getVoices() || [];
+                const voices = synth.getVoices() || [];
                 const prefix = langCode.split('-')[0].toLowerCase();
                 const match = voices.find(v => v.lang && (v.lang.toLowerCase() === langCode.toLowerCase() || v.lang.toLowerCase().startsWith(prefix)));
                 if (match) u.voice = match;
                 u.onend = () => resetGuideUI();
                 u.onerror = () => resetGuideUI();
-                window.speechSynthesis.speak(u);
+                synth.speak(u);
               }} catch(err) {{
                 resetGuideUI();
               }}
             }}
 
             function stopGuideAudio() {{
-              if (audioObj) {{
-                try {{ audioObj.pause(); audioObj.currentTime = 0; }} catch(e) {{}}
+              if (activeAudio) {{
+                try {{ activeAudio.pause(); activeAudio.currentTime = 0; }} catch(e) {{}}
+                activeAudio = null;
               }}
-              if (window.speechSynthesis) {{
-                try {{ window.speechSynthesis.cancel(); }} catch(e) {{}}
+              const synth = (window.parent && window.parent.speechSynthesis) ? window.parent.speechSynthesis : window.speechSynthesis;
+              if (synth) {{
+                try {{ synth.cancel(); }} catch(e) {{}}
               }}
               resetGuideUI();
               const status = document.getElementById("vg-status-text");
@@ -2347,13 +2732,14 @@ else:
             if (autoPlayOnLoad) {{
               setTimeout(() => {{
                 playGuideAudio();
-              }}, 200);
+              }}, 250);
             }}
           </script>
         </body>
         </html>
         """
-        components.html(guide_component_html, height=58, scrolling=False)
+
+        components.html(guide_component_html, height=72, scrolling=False)
 
         # Live Listening Banner if mic is active in navigation
         if st.session_state.get("mic_active") == "navigation":

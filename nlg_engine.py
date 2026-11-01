@@ -322,15 +322,16 @@ class CampusNLGEngine:
 
     def _compress_path_segments(self, path: List[str], graph) -> List[Dict[str, Any]]:
         """
-        Groups raw node sequence into logical, compressed human-friendly wayfinding segments:
-        - Multi-floor stair/elevator climbs compressed to 1 transition
-        - Sequential corridor classroom/lab chains compressed to 1 hallway instruction
-        - Entrance sequences compressed into 1 entrance step
+        Groups raw node paths into balanced, human-friendly wayfinding segments:
+        - Maintains 3 to 6 intuitive checkpoints per route.
+        - Keeps distinct steps for departures, turns, vertical transitions, and arrivals.
+        - Compresses noisy straight hallway hops without collapsing the entire route.
         """
         if not path:
             return []
+        
+        fl_start = self.locations_dict.get(path[0], {}).get("floor", 0)
         if len(path) == 1:
-            fl = self.locations_dict.get(path[0], {}).get("floor", 0)
             return [{
                 "type": "arrival",
                 "from_node": path[0],
@@ -338,138 +339,156 @@ class CampusNLGEngine:
                 "nodes": [path[0]],
                 "distance": 0,
                 "path_type": "Standing",
-                "from_floor": fl,
-                "to_floor": fl
+                "from_floor": fl_start,
+                "to_floor": fl_start
             }]
 
         segments = []
         i = 0
         n = len(path)
 
-        def get_corridor_cluster(loc_name: str) -> Optional[str]:
-            if "Classroom G" in loc_name:
-                return "Classrooms G"
-            if "Classroom S" in loc_name:
-                return "Classrooms S"
-            if "Classroom F" in loc_name:
-                return "Classrooms F"
-            if "Physics Lab" in loc_name or "Dept. of Physics" in loc_name:
-                return "Physics Wing"
-            if "Chemistry Lab" in loc_name or "Dept. of Chemistry" in loc_name:
-                return "Chemistry Wing"
-            if "Biotechnology" in loc_name or "Biotech" in loc_name:
-                return "Biotech Wing"
-            return None
+        def get_edge_meta(u: str, v: str) -> Dict[str, Any]:
+            if hasattr(graph, 'get_edge_data'):
+                data = graph.get_edge_data(u, v)
+                if data:
+                    return data
+            if isinstance(graph, dict):
+                return graph.get(u, {}).get(v, {})
+            return {}
+
+        def is_vertical_node(node_name: str) -> bool:
+            low = node_name.lower()
+            return any(k in low for k in ["stair", "lift", "elevator", "ಮೆಟ್ಟಿಲು", "ಲಿಫ್ಟ್"])
 
         while i < n - 1:
             curr_node = path[i]
             next_node = path[i + 1]
             c_info = self.locations_dict.get(curr_node, {"floor": 0})
             n_info = self.locations_dict.get(next_node, {"floor": 0})
+            c_floor = c_info.get("floor", 0)
+            n_floor = n_info.get("floor", 0)
 
-            # 1. Multi-floor vertical transition
-            if c_info.get("floor", 0) != n_info.get("floor", 0):
+            # 1. Floor transitions (Stairs & Elevators)
+            # Only trigger vertical segment when there is an actual floor change OR movement between two vertical infrastructure nodes
+            is_vert_c = is_vertical_node(curr_node)
+            is_vert_n = is_vertical_node(next_node)
+            if c_floor != n_floor or (is_vert_c and is_vert_n):
                 seg_nodes = [curr_node, next_node]
-                edge_info = graph.get_edge_data(curr_node, next_node, default={}) if hasattr(graph, 'get_edge_data') else graph.get(curr_node, {}).get(next_node, {})
-                total_dist = edge_info.get("distance", 15)
-                pt = edge_info.get("path_type", "Stairs")
+                init_e = get_edge_meta(curr_node, next_node)
+                total_dist = init_e.get("distance", 15)
+                p_type = init_e.get("path_type", "Stairs")
+                
                 j = i + 1
                 while j < n - 1:
                     step_c = path[j]
                     step_n = path[j + 1]
-                    c_fl = self.locations_dict.get(step_c, {}).get("floor", 0)
-                    n_fl = self.locations_dict.get(step_n, {}).get("floor", 0)
-                    if c_fl != n_fl:
+                    step_c_fl = self.locations_dict.get(step_c, {}).get("floor", 0)
+                    step_n_fl = self.locations_dict.get(step_n, {}).get("floor", 0)
+                    if step_c_fl != step_n_fl or (is_vertical_node(step_c) and is_vertical_node(step_n)):
                         seg_nodes.append(step_n)
-                        st_edge = graph.get_edge_data(step_c, step_n, default={}) if hasattr(graph, 'get_edge_data') else graph.get(step_c, {}).get(step_n, {})
-                        total_dist += st_edge.get("distance", 15)
+                        e = get_edge_meta(step_c, step_n)
+                        total_dist += e.get("distance", 15)
                         j += 1
                     else:
                         break
-                target_floor = self.locations_dict.get(seg_nodes[-1], {}).get("floor", n_info.get("floor", 0))
+                target_floor = self.locations_dict.get(seg_nodes[-1], {}).get("floor", n_floor)
                 segments.append({
                     "type": "vertical",
                     "from_node": curr_node,
                     "to_node": seg_nodes[-1],
                     "nodes": seg_nodes,
                     "distance": total_dist,
-                    "path_type": pt,
-                    "from_floor": c_info.get("floor", 0),
+                    "path_type": p_type,
+                    "from_floor": c_floor,
                     "to_floor": target_floor
                 })
                 i = j
                 continue
 
             # 2. Main Gate Entrance Consolidation
-            if curr_node == "Main Gate" and next_node == "Security Cabin" and i + 2 < n:
-                dest_entrance = path[i + 2]
-                e1 = graph.get_edge_data("Main Gate", "Security Cabin", default={}) if hasattr(graph, 'get_edge_data') else graph.get("Main Gate", {}).get("Security Cabin", {})
-                e2 = graph.get_edge_data("Security Cabin", dest_entrance, default={}) if hasattr(graph, 'get_edge_data') else graph.get("Security Cabin", {}).get(dest_entrance, {})
-                d1 = e1.get("distance", 20)
-                d2 = e2.get("distance", 15)
+            if curr_node == "Main Gate" and i + 1 < n:
+                entrance_dest = path[min(i + 2, n - 1)] if (i + 2 < n and "Security" in next_node) else next_node
+                skip_count = 2 if entrance_dest != next_node else 1
+                e_dist = sum(get_edge_meta(path[i + k], path[i + k + 1]).get("distance", 15) for k in range(skip_count))
                 segments.append({
                     "type": "entrance_walk",
                     "from_node": "Main Gate",
-                    "to_node": dest_entrance,
-                    "nodes": ["Main Gate", "Security Cabin", dest_entrance],
-                    "distance": d1 + d2,
+                    "to_node": entrance_dest,
+                    "nodes": path[i:i + skip_count + 1],
+                    "distance": max(15, e_dist),
                     "path_type": "Paved Walkway",
                     "from_floor": 0,
                     "to_floor": 0
                 })
-                i += 2
+                i += skip_count
                 continue
 
-            # 3. Consecutive Corridor / Wing Chains
-            curr_cluster = get_corridor_cluster(curr_node)
-            next_cluster = get_corridor_cluster(next_node)
-            target_cluster = next_cluster if next_cluster else curr_cluster
+            # 3. Same-floor corridor movement: Compress consecutive hops up to a sensible limit (max 40m or 3 nodes)
+            # This avoids collapsing the whole floor into 1 step while eliminating single-hop noise.
+            seg_nodes = [curr_node, next_node]
+            init_e = get_edge_meta(curr_node, next_node)
+            accum_dist = init_e.get("distance", 10)
+            p_type = init_e.get("path_type", "Corridor")
 
-            if target_cluster and (next_cluster == target_cluster):
-                seg_nodes = [curr_node, next_node]
-                init_edge = graph.get_edge_data(curr_node, next_node, default={}) if hasattr(graph, 'get_edge_data') else graph.get(curr_node, {}).get(next_node, {})
-                total_dist = init_edge.get("distance", 10)
-                j = i + 1
-                while j < n - 1:
-                    step_c = path[j]
-                    step_n = path[j + 1]
-                    c_fl = self.locations_dict.get(step_c, {}).get("floor", 0)
-                    n_fl = self.locations_dict.get(step_n, {}).get("floor", 0)
-                    if get_corridor_cluster(step_n) == target_cluster and c_fl == n_fl:
-                        seg_nodes.append(step_n)
-                        c_edge = graph.get_edge_data(step_c, step_n, default={}) if hasattr(graph, 'get_edge_data') else graph.get(step_c, {}).get(step_n, {})
-                        total_dist += c_edge.get("distance", 10)
-                        j += 1
-                    else:
-                        break
-                if len(seg_nodes) > 2 or (curr_cluster == target_cluster and len(seg_nodes) >= 2):
-                    segments.append({
-                        "type": "corridor_chain",
-                        "from_node": curr_node,
-                        "to_node": seg_nodes[-1],
-                        "nodes": seg_nodes,
-                        "cluster": target_cluster,
-                        "distance": total_dist,
-                        "path_type": "Corridor",
-                        "from_floor": c_info.get("floor", 0),
-                        "to_floor": c_info.get("floor", 0)
-                    })
-                    i = j
-                    continue
+            j = i + 1
+            while j < n - 1:
+                step_c = path[j]
+                step_n = path[j + 1]
+                step_c_fl = self.locations_dict.get(step_c, {}).get("floor", 0)
+                step_n_fl = self.locations_dict.get(step_n, {}).get("floor", 0)
 
-            # 4. Default Single Step
-            edge_data = graph.get_edge_data(curr_node, next_node, default={}) if hasattr(graph, 'get_edge_data') else graph.get(curr_node, {}).get(next_node, {})
+                # Stop compression if hitting stairs, floor changes, or reaching final destination
+                if step_c_fl != step_n_fl or (is_vertical_node(step_c) and is_vertical_node(step_n)) or (j + 1 == n - 1):
+                    break
+
+                # Limit straight compression distance so users have checkpoints
+                if accum_dist >= 40 or len(seg_nodes) >= 3:
+                    break
+
+                edge_meta = get_edge_meta(step_c, step_n)
+                seg_nodes.append(step_n)
+                accum_dist += edge_meta.get("distance", 10)
+                j += 1
+
+            if len(seg_nodes) > 2:
+                segments.append({
+                    "type": "corridor_chain",
+                    "from_node": curr_node,
+                    "to_node": seg_nodes[-1],
+                    "nodes": seg_nodes,
+                    "distance": accum_dist,
+                    "path_type": p_type,
+                    "from_floor": c_floor,
+                    "to_floor": c_floor
+                })
+                i = j
+            else:
+                # Single step
+                segments.append({
+                    "type": "single_step",
+                    "from_node": curr_node,
+                    "to_node": next_node,
+                    "nodes": [curr_node, next_node],
+                    "distance": accum_dist,
+                    "path_type": p_type,
+                    "from_floor": c_floor,
+                    "to_floor": n_floor
+                })
+                i += 1
+
+        # 4. Ensure the final destination arrival step is never swallowed
+        if segments and segments[-1]["to_node"] != path[-1]:
+            last_edge = get_edge_meta(segments[-1]["to_node"], path[-1])
             segments.append({
                 "type": "single_step",
-                "from_node": curr_node,
-                "to_node": next_node,
-                "nodes": [curr_node, next_node],
-                "distance": edge_data.get("distance", 10),
-                "path_type": edge_data.get("path_type", "Corridor"),
-                "from_floor": c_info.get("floor", 0),
-                "to_floor": n_info.get("floor", 0)
+                "from_node": segments[-1]["to_node"],
+                "to_node": path[-1],
+                "nodes": [segments[-1]["to_node"], path[-1]],
+                "distance": last_edge.get("distance", 10),
+                "path_type": "Corridor",
+                "from_floor": self.locations_dict.get(path[-1], {}).get("floor", 0),
+                "to_floor": self.locations_dict.get(path[-1], {}).get("floor", 0)
             })
-            i += 1
 
         return segments
 
@@ -549,31 +568,49 @@ class CampusNLGEngine:
                 action_type = "Floor Transition"
 
                 if "Main Reception Staircase" in from_n or "Main Reception Staircase" in to_n:
-                    if language == "Kannada":
-                        part1 = f"ನೆಲಮಹಡಿಯಿಂದ ಮುಖ್ಯ ಸ್ವಾಗತ {t_mode_kn} ಹತ್ತಿ ನೇರವಾಗಿ ಮಹಡಿ {to_fl} ರ ಲ್ಯಾಂಡಿಂಗ್ ತಲುಪಿ."
-                        part2 = f"ಕಟಾಂಜನದ ಬಲಬದಿಯಲ್ಲಿ {t_mode_kn}ಗಳನ್ನು ಹತ್ತಿ ಮಧ್ಯದ ಮಹಡಿಗಳನ್ನು ದಾಟಿ ಮೇಲೆ ಹೋಗಿ."
-                        part3 = landmark_info["cue"]
-                    elif language == "Hindi":
-                        part1 = f"भूतल से मुख्य स्वागत {t_mode_hi} को चढ़कर सीधे मंजिल {to_fl} की लैंडिंग पर पहुँचें।"
-                        part2 = f"रेलिंग के साथ दाईं ओर रहते हुए {t_mode_hi} चढ़ें और बीच की मंजिलों को पार करते हुए ऊपर जाएँ।"
-                        part3 = landmark_info["cue"]
+                    if to_fl < curr_fl:
+                        if language == "Kannada":
+                            part1 = f"ಮಹಡಿ {curr_fl} ರಿಂದ ಮುಖ್ಯ ಸ್ವಾಗತ {t_mode_kn} ಇಳಿದು ಮಹಡಿ {to_fl} ರ ಲ್ಯಾಂಡಿಂಗ್ ತಲುಪಿ."
+                            part2 = f"ಕಟಾಂಜನದ ಬಲಬದಿಯಲ್ಲಿ {t_mode_kn}ಗಳನ್ನು ಇಳಿದು ಕೆಳಗೆ ಸಾಗಿ."
+                        elif language == "Hindi":
+                            part1 = f"मंजिल {curr_fl} से मुख्य स्वागत {t_mode_hi} से नीचे उतरकर मंजिल {to_fl} की लैंडिंग पर पहुँचें।"
+                            part2 = f"रेलिंग के साथ दाईं ओर रहते हुए {t_mode_hi} से नीचे उतरें।"
+                        else:
+                            part1 = f"Descend the Main Reception {t_mode_en.capitalize()} from Floor {curr_fl} down to the Floor {to_fl} landing."
+                            part2 = f"Descend the {t_mode_en} keeping to the right along the railing."
                     else:
-                        part1 = f"Climb the Main Reception {t_mode_en.capitalize()} directly from Floor {curr_fl} to the Floor {to_fl} landing."
-                        part2 = f"Ascend the {t_mode_en} keeping to the right along the railing, bypassing intermediate floor landings."
-                        part3 = landmark_info["cue"]
+                        if language == "Kannada":
+                            part1 = f"ಮಹಡಿ {curr_fl} ರಿಂದ ಮುಖ್ಯ ಸ್ವಾಗತ {t_mode_kn} ಹತ್ತಿ ನೇರವಾಗಿ ಮಹಡಿ {to_fl} ರ ಲ್ಯಾಂಡಿಂಗ್ ತಲುಪಿ."
+                            part2 = f"ಕಟಾಂಜನದ ಬಲಬದಿಯಲ್ಲಿ {t_mode_kn}ಗಳನ್ನು ಹತ್ತಿ ಮಧ್ಯದ ಮಹಡಿಗಳನ್ನು ದಾಟಿ ಮೇಲೆ ಹೋಗಿ."
+                        elif language == "Hindi":
+                            part1 = f"मंजिल {curr_fl} से मुख्य स्वागत {t_mode_hi} को चढ़कर सीधे मंजिल {to_fl} की लैंडिंग पर पहुँचें।"
+                            part2 = f"रेलिंग के साथ दाईं ओर रहते हुए {t_mode_hi} चढ़ें और बीच की मंजिलों को पार करते हुए ऊपर जाएँ।"
+                        else:
+                            part1 = f"Climb the Main Reception {t_mode_en.capitalize()} directly from Floor {curr_fl} to the Floor {to_fl} landing."
+                            part2 = f"Ascend the {t_mode_en} keeping to the right along the railing, bypassing intermediate floor landings."
+                    part3 = landmark_info["cue"]
                 else:
-                    if language == "Kannada":
-                        part1 = f"ಪ್ರವೇಶದ್ವಾರದಿಂದ ತಕ್ಷಣ {t_mode_kn} ಬಳಸಿ ಮಹಡಿ {curr_fl} ರಿಂದ ಮಹಡಿ {to_fl} ಗೆ ಹೋಗಿ."
-                        part2 = f"ಕಟಾಂಜನದ ಬಲಬದಿಯಲ್ಲಿ {t_name} ಕಡೆಗೆ ಮುನ್ನಡೆಯಿರಿ."
-                        part3 = landmark_info["cue"]
-                    elif language == "Hindi":
-                        part1 = f"प्रवेश द्वार से तुरंत {t_mode_hi} का उपयोग करके मंजिल {curr_fl} से मंजिल {to_fl} पर जाएं।"
-                        part2 = f"रेलिंग के दाईं ओर रहते हुए {t_name} की ओर बढ़ें।"
-                        part3 = landmark_info["cue"]
+                    if to_fl < curr_fl:
+                        if language == "Kannada":
+                            part1 = f"ಮಹಡಿ {curr_fl} ರಿಂದ {t_mode_kn} ಇಳಿದು ಮಹಡಿ {to_fl} ಗೆ ಹೋಗಿ."
+                            part2 = f"ಕಟಾಂಜನದ ಬಲಬದಿಯಲ್ಲಿ {t_name} ಕಡೆಗೆ ಮುನ್ನಡೆಯಿರಿ."
+                        elif language == "Hindi":
+                            part1 = f"मंजिल {curr_fl} से {t_mode_hi} से नीचे उतरकर मंजिल {to_fl} पर जाएं।"
+                            part2 = f"रेलिंग के दाईं ओर रहते हुए {t_name} की ओर बढ़ें।"
+                        else:
+                            part1 = f"Take the {t_mode_en} from Floor {curr_fl} down to Floor {to_fl}."
+                            part2 = f"Descend the flight of stairs towards {t_name}, keeping to the right hand side along the railing."
                     else:
-                        part1 = f"Take the {t_mode_en} from Floor {curr_fl} up to Floor {to_fl} immediately at the staircase entrance."
-                        part2 = f"Ascend the flight of stairs towards {t_name}, keeping to the right hand side along the railing."
-                        part3 = landmark_info["cue"]
+                        if language == "Kannada":
+                            part1 = f"ಪ್ರವೇಶದ್ವಾರದಿಂದ ತಕ್ಷಣ {t_mode_kn} ಬಳಸಿ ಮಹಡಿ {curr_fl} ರಿಂದ ಮಹಡಿ {to_fl} ಗೆ ಹೋಗಿ."
+                            part2 = f"ಕಟಾಂಜನದ ಬಲಬದಿಯಲ್ಲಿ {t_name} ಕಡೆಗೆ ಮುನ್ನಡೆಯಿರಿ."
+                        elif language == "Hindi":
+                            part1 = f"प्रवेश द्वार से तुरंत {t_mode_hi} का उपयोग करके मंजिल {curr_fl} से मंजिल {to_fl} पर जाएं।"
+                            part2 = f"रेलिंग के दाईं ओर रहते हुए {t_name} की ओर बढ़ें।"
+                        else:
+                            part1 = f"Take the {t_mode_en} from Floor {curr_fl} up to Floor {to_fl} immediately at the staircase entrance."
+                            part2 = f"Ascend the flight of stairs towards {t_name}, keeping to the right hand side along the railing."
+                    part3 = landmark_info["cue"]
 
             elif stype == "entrance_walk":
                 action_type = "Entrance Direction"
@@ -667,36 +704,83 @@ class CampusNLGEngine:
                     part2 = "Walk straight along the corridor. The BBA Department entrance is not directly in front; you will pass Classroom S12 and the connector window on your left side after a short walk."
                     part3 = landmark_info["cue"]
 
-            elif ("BBA" in from_n or "Commerce & Management" in from_n) and ("Computer Science" in to_n or "CS" in to_n):
+            elif "Main Reception Staircase" in from_n and ("Computer Science" in to_n or "CS" in to_n):
+                icon = "➡️"
+                action_type = "Corridor Movement"
+                if language == "Kannada":
+                    part1 = "ಎರಡನೇ ಮಹಡಿಯ ಮುಖ್ಯ ಸ್ವಾಗತ ಮೆಟ್ಟಿಲಿನಿಂದ ಇಳಿದು ಈಶಾನ್ಯ ಕಾರಿಡಾರ್ ಕಡೆಗೆ ಬಲಕ್ಕೆ ತಿರುಗಿ."
+                    part2 = "ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್ ವಿಭಾಗ ಮತ್ತು ಸಿಬ್ಬಂದಿ ಕೊಠಡಿಯ ಕಡೆಗೆ ನೇರವಾಗಿ ಸಾಗಿ. ಬಲಭಾಗದಲ್ಲಿ ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್ ಅಧ್ಯಾಪಕರ ಕೊಠಡಿ ಮತ್ತು ಕಂಪ್ಯೂಟರ್ ಲ್ಯಾಬ್ ೧ ಇರುತ್ತವೆ. ನೀವು ಭಾಷಾ ಪ್ರಯೋಗಾಲಯ (Language Lab) ದಾಟುವ ಮೊದಲೇ ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್ ವಿಭಾಗ ಸಿಗುತ್ತದೆ."
+                    part3 = landmark_info["cue"]
+                elif language == "Hindi":
+                    part1 = "द्वितीय तल की मुख्य स्वागत सीढ़ियों से उतरकर ईस्ट विंग गलियारे की ओर दाएं मुड़ें।"
+                    part2 = "कंप्यूटर विज्ञान विभाग और स्टाफ रूम की ओर सीधे चलें। कंप्यूटर साइंस संकाय कक्ष और कंप्यूटर लैब 1 गलियारे के प्रवेश पर ही आपकी दाईं ओर स्थित हैं। भाषा प्रयोगशाला (Language Lab) पहुँचने से पहले ही आपको कंप्यूटर साइंस विभाग मिल जाएगा।"
+                    part3 = landmark_info["cue"]
+                else:
+                    part1 = "Step off the Main Reception Staircase onto the Floor 2 landing and turn right into the East Wing hallway."
+                    part2 = "Walk directly toward the Department of Computer Science & Staff Room. The faculty consultation rooms and Computer Lab 1 are located right at the entrance of the corridor on your right. You will reach the Computer Science Department immediately before reaching the Language Lab or other labs."
+                    part3 = landmark_info["cue"]
+
+            elif ("BBA" in from_n or "Commerce & Management" in from_n or "Language Lab" in from_n) and ("Computer Science" in to_n or "CS" in to_n):
                 icon = "⬆️"
                 action_type = "Corridor Movement"
                 if language == "Kannada":
-                    part1 = "ಬಿಬಿಎ ವಿಭಾಗದ ಬಾಗಿಲನ್ನು ದಾಟಿ ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್ ವಿಭಾಗದ ಕಡೆಗೆ ಕಾರಿಡಾರ್‌ನಲ್ಲಿ ನೇರವಾಗಿ ಮುಂದುವರಿಯಿರಿ."
-                    part2 = "ಕಾರಿಡಾರ್‌ನಲ್ಲಿ ನೇರವಾಗಿ ಸಾಗಿ. ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲಿ ಭಾಷಾ ಪ್ರಯೋಗಾಲಯ (Language Lab) ಮತ್ತು ಎಲೆಕ್ಟ್ರಾನಿಕ್ಸ್ ಲ್ಯಾಬ್ ದಾಟುತ್ತೀರಿ, ಬಲಭಾಗದಲ್ಲಿ ಅಂಗಳದ ಬಾಲ್ಕನಿ ಕಟಾಂಜನವಿರುತ್ತದೆ."
+                    part1 = "ಕಾರಿಡಾರ್‌ನಲ್ಲಿ ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್ ವಿಭಾಗದ ಕಡೆಗೆ ನೇರವಾಗಿ ಮುಂದುವರಿಯಿರಿ."
+                    part2 = "ಕಾರಿಡಾರ್‌ನಲ್ಲಿ ನೇರವಾಗಿ ಸಾಗಿ. ಎಲೆಕ್ಟ್ರಾನಿಕ್ಸ್ ಲ್ಯಾಬ್, ಕಂಪ್ಯೂಟರ್ ಲ್ಯಾಬ್ ೨ ಮತ್ತು ತರಗತಿ ಎಸ್ ೮ ದಾಟಿ ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್ ವಿಭಾಗ ತಲುಪಿ."
                     part3 = landmark_info["cue"]
                 elif language == "Hindi":
-                    part1 = "BBA विभाग के दरवाजे को पार करते हुए कंप्यूटर साइंस विभाग की ओर गलियारे में सीधे आगे बढ़ें।"
-                    part2 = "गलियारे में सीधे चलें। आप अपनी बाईं ओर भाषा प्रयोगशाला और इलेक्ट्रॉनिक्स लैब पार करेंगे, जबकि दाईं ओर खुले आंगन की बालकनी की रेलिंग होगी।"
+                    part1 = "गलियारे में कंप्यूटर साइंस विभाग की ओर सीधे आगे बढ़ें।"
+                    part2 = "गलियारे में सीधे चलें। इलेक्ट्रॉनिक्स लैब, कंप्यूटर लैब 2 और कक्षा S8 पार करते हुए कंप्यूटर साइंस विभाग तक पहुँचें।"
                     part3 = landmark_info["cue"]
                 else:
-                    part1 = "Continue straight along the corridor past the BBA Department doorway towards the Department of Computer Science."
-                    part2 = "Walk straight along the corridor. You will pass the Language Lab and Electronics & Hardware Lab on your left, while the quadrangle balcony railing remains on your right."
+                    part1 = "Continue straight along the corridor towards the Department of Computer Science."
+                    part2 = "Walk straight along the corridor past the Electronics & Hardware Lab, Computer Lab 2, and Classroom S8 until you reach the Computer Science Department."
+                    part3 = landmark_info["cue"]
+
+            elif ("Computer Science" in from_n or "CS" in from_n) and ("Language Lab" in to_n or "BBA" in to_n or "Commerce & Management" in to_n):
+                icon = "⬆️"
+                action_type = "Corridor Movement"
+                if language == "Kannada":
+                    part1 = "ಕಂಪ್ಯೂಟರ್ ಸೈನ್ಸ್ ವಿಭಾಗದಿಂದ ಕಾರಿಡಾರ್‌ನಲ್ಲಿ ದಕ್ಷಿಣದ ಕಡೆಗೆ ನೇರವಾಗಿ ಸಾಗಿ."
+                    part2 = "ಕಾರಿಡಾರ್‌ನಲ್ಲಿ ನೇರವಾಗಿ ಸಾಗಿ. ತರಗತಿ ಎಸ್ ೮, ಕಂಪ್ಯೂಟರ್ ಲ್ಯಾಬ್ ೨ ಮತ್ತು ಎಲೆಕ್ಟ್ರಾನಿಕ್ಸ್ ಲ್ಯಾಬ್ ದಾಟಿದ ನಂತರ ಭಾಷಾ ಪ್ರಯೋಗಾಲಯ (Language Lab) ತಲುಪುತ್ತೀರಿ."
+                    part3 = landmark_info["cue"]
+                elif language == "Hindi":
+                    part1 = "कंप्यूटर साइंस विभाग से गलियारे में दक्षिण की ओर सीधे चलें।"
+                    part2 = "गलियारे में सीधे बढ़ें। कक्षा S8, कंप्यूटर लैब 2 और इलेक्ट्रॉनिक्स लैब पार करने के बाद आप भाषा प्रयोगशाला तक पहुँचेंगे।"
+                    part3 = landmark_info["cue"]
+                else:
+                    part1 = "From the Department of Computer Science, continue straight south down the East Wing corridor."
+                    part2 = "Walk straight along the corridor past Classroom S8, Computer Lab 2, and the Electronics & Hardware Lab before reaching the Language Lab."
                     part3 = landmark_info["cue"]
 
             elif stype == "corridor_chain":
                 icon = "⬆️"
                 action_type = "Corridor Movement"
+                intermediates = seg.get("nodes", [])[1:-1]
+                passed_names = [self._get_localized_name(nd, language) for nd in intermediates]
+
                 if language == "Kannada":
-                    part1 = f"ಕಾರಿಡಾರ್ ತಿರುವಿನಿಂದ ನೇರವಾಗಿ {t_name} ಕಡೆಗೆ ಮುನ್ನಡೆಯಿರಿ."
-                    part2 = "ಕಾರಿಡಾರ್‌ನಲ್ಲಿ ನೇರವಾಗಿ ಸಾಗಿ. ನಿಮ್ಮ ಎಡಭಾಗದಲ್ಲಿ ತರಗತಿಗಳ ನಾಮಫಲಕಗಳುಳ್ಳ ಬಾಗಿಲುಗಳು ಮತ್ತು ಬಲಭಾಗದಲ್ಲಿ ಅಂಗಳದ ಕಿಟಕಿಗಳನ್ನು ದಾಟುತ್ತೀರಿ."
+                    part1 = f"ಕಾರಿಡಾರ್‌ನಲ್ಲಿ ನೇರವಾಗಿ {t_name} ಕಡೆಗೆ ಮುನ್ನಡೆಯಿರಿ."
+                    if passed_names:
+                        passed_str = " ಮತ್ತು ".join(passed_names) if len(passed_names) <= 2 else (", ".join(passed_names[:-1]) + ", ಮತ್ತು " + passed_names[-1])
+                        part2 = f"ಕಾರಿಡಾರ್‌ನಲ್ಲಿ {passed_str} ಗಳನ್ನು ದಾಟಿ ಸುಮಾರು {dist} ಮೀಟರ್ ನೇರವಾಗಿ {t_name} ಕಡೆಗೆ ಸಾಗಿ."
+                    else:
+                        part2 = f"ಕಾರಿಡಾರ್‌ನಲ್ಲಿ ಸುಮಾರು {dist} ಮೀಟರ್ ನೇರವಾಗಿ {t_name} ಕಡೆಗೆ ಸಾಗಿ."
                     part3 = landmark_info["cue"]
                 elif language == "Hindi":
-                    part1 = f"गलियारे के मोड़ से सीधे {t_name} की ओर बढ़ें।"
-                    part2 = "गलियारे में सीधे चलें। आप अपनी बाईं ओर कमरों के नेमप्लेट और दाईं ओर आंगन की खिड़कियां पार करेंगे।"
+                    part1 = f"गलियारे में सीधे {t_name} की तरफ बढ़ें।"
+                    if passed_names:
+                        passed_str = " और ".join(passed_names) if len(passed_names) <= 2 else (", ".join(passed_names[:-1]) + ", और " + passed_names[-1])
+                        part2 = f"गलियारे में {passed_str} को पार करते हुए लगभग {dist} मीटर सीधे {t_name} की ओर बढ़ें।"
+                    else:
+                        part2 = f"गलियारे में लगभग {dist} मीटर सीधे {t_name} की ओर बढ़ें।"
                     part3 = landmark_info["cue"]
                 else:
-                    part1 = f"Turn into the corridor and walk straight towards {t_name}."
-                    part2 = "Walk straight along the corridor. You will pass classroom doors with room number plaques on your left and exterior courtyard windows on your right."
+                    part1 = f"Continue straight along the corridor towards {t_name}."
+                    if passed_names:
+                        passed_str = " and ".join(passed_names) if len(passed_names) <= 2 else (", ".join(passed_names[:-1]) + ", and " + passed_names[-1])
+                        part2 = f"Walk straight past {passed_str} for about {dist} meters until you reach {t_name}."
+                    else:
+                        part2 = f"Walk straight along the corridor for about {dist} meters towards {t_name}."
                     part3 = landmark_info["cue"]
 
             else:  # single_step
