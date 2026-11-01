@@ -64,43 +64,6 @@ def render_html(html_str: str, sidebar: bool = False):
         st.markdown(cleaned, unsafe_allow_html=True)
 
 # ----------------------------------------------------
-# Top-Level Parent Window Message Bridge for Voice Queries
-# ----------------------------------------------------
-render_html("""
-<img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'></svg>" style="display:none;" 
-onload="(function(){
-    if (!window._mlacwVoiceNavAttached) {
-        window._mlacwVoiceNavAttached = true;
-        window.addEventListener('message', function(event) {
-            if (event && event.data && (event.data.type === 'VOICE_NAV' || event.data.voice_q)) {
-                var q = event.data.query || event.data.voice_q;
-                if (q && typeof q === 'string' && q.trim().length > 0) {
-                    var base = window.location.pathname || '/';
-                    if (!base.endsWith('/')) base = base + '/';
-                    window.location.href = base + '?voice_q=' + encodeURIComponent(q.trim());
-                }
-            }
-        });
-    }
-})()" 
-onerror="(function(){
-    if (!window._mlacwVoiceNavAttached) {
-        window._mlacwVoiceNavAttached = true;
-        window.addEventListener('message', function(event) {
-            if (event && event.data && (event.data.type === 'VOICE_NAV' || event.data.voice_q)) {
-                var q = event.data.query || event.data.voice_q;
-                if (q && typeof q === 'string' && q.trim().length > 0) {
-                    var base = window.location.pathname || '/';
-                    if (!base.endsWith('/')) base = base + '/';
-                    window.location.href = base + '?voice_q=' + encodeURIComponent(q.trim());
-                }
-            }
-        });
-    }
-})()">
-""")
-
-# ----------------------------------------------------
 # 4. Data Loading & Engine Initialization
 # ----------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -481,6 +444,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
     <html>
     <head>
     <meta charset="utf-8">
+    <script src="./streamlit-component-lib.js"></script>
     <style>
       body {{
         margin: 0;
@@ -574,72 +538,51 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
       </div>
 
       <script>
+        // Ensure Streamlit component bridge is always available
+        if (!window.Streamlit) {{
+          (function() {{
+            function sendMessage(type, data) {{
+              try {{
+                window.parent.postMessage(Object.assign({{
+                  isStreamlitMessage: true,
+                  type: type
+                }}, data || {{}}), "*");
+              }} catch (e) {{
+                console.warn("Streamlit sendMessage error:", e);
+              }}
+            }}
+            window.Streamlit = {{
+              setComponentReady: function() {{ sendMessage("streamlit:componentReady", {{ apiVersion: 1 }}); }},
+              setFrameHeight: function(h) {{ sendMessage("streamlit:setFrameHeight", {{ height: h }}); }},
+              setComponentValue: function(v) {{ sendMessage("streamlit:setComponentValue", {{ value: v }}); }}
+            }};
+            try {{ window.Streamlit.setComponentReady(); }} catch(e) {{}}
+          }})();
+        }}
+
+        function sendToStreamlit(value) {{
+          if (window.Streamlit) {{
+            window.Streamlit.setComponentValue(value);
+          }}
+          // Fallback anchor click in case direct component bridge is restricted
+          try {{
+            const a = document.createElement('a');
+            let path = '';
+            try {{ path = window.parent.location.pathname; }} catch(err) {{ path = ''; }}
+            a.href = (path || '') + '?voice_q=' + encodeURIComponent(value);
+            a.target = '_top';
+            document.body.appendChild(a);
+            a.click();
+          }} catch(e) {{}}
+        }}
+
+        if (window.Streamlit) {{
+          window.Streamlit.setFrameHeight(130);
+        }}
+
         const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
         const txt = document.getElementById("transcript-text");
         const btn = document.getElementById("listen-toggle");
-
-        function navigateTop(query) {{
-          const clean = (query || '').trim();
-          if (!clean) return;
-          const encoded = encodeURIComponent(clean);
-          
-          // 1. PostMessage to parent & top (Always permitted by browser iframe sandboxes)
-          try {{
-            if (window.parent) {{
-              window.parent.postMessage({{ type: 'VOICE_NAV', query: clean, voice_q: clean }}, '*');
-            }}
-          }} catch(e) {{}}
-          try {{
-            if (window.top && window.top !== window.parent) {{
-              window.top.postMessage({{ type: 'VOICE_NAV', query: clean, voice_q: clean }}, '*');
-            }}
-          }} catch(e) {{}}
-
-          // 2. Direct parent navigation if same-origin permitted
-          try {{
-            if (window.parent && window.parent.location) {{
-              const p = window.parent.location.pathname || '/';
-              window.parent.location.href = p + '?voice_q=' + encoded;
-              return;
-            }}
-          }} catch(e) {{}}
-
-          // 3. Anchor click targeting _top (natively permitted by standard browser link handling)
-          try {{
-            const link = document.createElement('a');
-            link.href = '/?voice_q=' + encoded;
-            link.target = '_top';
-            document.body.appendChild(link);
-            link.click();
-            return;
-          }} catch(e) {{
-            console.warn("Anchor click failed:", e);
-          }}
-
-          // 4. Form submission targeting _top
-          try {{
-            const form = document.createElement('form');
-            form.method = 'GET';
-            form.action = '/';
-            form.target = '_top';
-            const inp = document.createElement('input');
-            inp.type = 'hidden';
-            inp.name = 'voice_q';
-            inp.value = clean;
-            form.appendChild(inp);
-            document.body.appendChild(form);
-            form.submit();
-            return;
-          }} catch(e) {{}}
-
-          // 5. Fallback direct top window assign
-          try {{
-            if (window.top && window.top.location) {{
-              const p = window.top.location.pathname || '/';
-              window.top.location.href = p + '?voice_q=' + encoded;
-            }}
-          }} catch(e) {{}}
-        }}
 
         if (!SpeechClass) {{
           txt.innerHTML = "⚠️ Speech recognition is not supported in this browser. Please use Chrome or Edge.";
@@ -651,13 +594,11 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
           recognition.lang = "{lang_code}";
           let isListening = false;
           let hasRecognizedFinal = false;
-          let latestHeard = "";
 
           btn.onclick = () => {{
             if (!isListening) {{
               try {{
                 hasRecognizedFinal = false;
-                latestHeard = "";
                 recognition.start();
               }} catch (err) {{
                 console.warn(err);
@@ -686,18 +627,17 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
             }}
             const spoken = (final || interim).trim();
             if (spoken) {{
-              latestHeard = spoken;
               txt.innerHTML = "🗣️ <i>" + spoken + "</i>";
             }}
             if (final.trim().length > 0) {{
               hasRecognizedFinal = true;
               const cleanFinal = final.trim();
-              txt.innerHTML = "✅ Navigating: <b>" + cleanFinal + "</b>...";
+              txt.innerHTML = "✅ Moving to active wayfinding: <b>" + cleanFinal + "</b>...";
               txt.style.color = "#15803D";
               btn.style.display = "none";
 
               setTimeout(() => {{
-                navigateTop(cleanFinal);
+                sendToStreamlit(cleanFinal);
               }}, 200);
             }}
           }};
@@ -717,24 +657,10 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
 
           recognition.onend = () => {{
             isListening = false;
-            // If final was already recognized and navigation started, don't reset
-            if (hasRecognizedFinal) return;
-
-            // If we heard speech in interim results before silence ended the session, navigate!
-            if (latestHeard && latestHeard.trim().length > 1) {{
-              hasRecognizedFinal = true;
-              const cleanHeard = latestHeard.trim();
-              txt.innerHTML = "✅ Navigating: <b>" + cleanHeard + "</b>...";
-              txt.style.color = "#15803D";
-              btn.style.display = "none";
-              setTimeout(() => {{
-                navigateTop(cleanHeard);
-              }}, 200);
-              return;
+            if (!hasRecognizedFinal) {{
+              btn.textContent = "🎙️ Start Speaking";
+              btn.style.background = "#E11D48";
             }}
-
-            btn.textContent = "🎙️ Start Speaking";
-            btn.style.background = "#E11D48";
           }};
         }}
       </script>
@@ -742,7 +668,9 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
     </html>
     """
 
-    components.html(component_html, height=125, scrolling=False)
+    spoken_value = components.html(component_html, height=130, scrolling=False)
+    if spoken_value and isinstance(spoken_value, str) and spoken_value.strip():
+        handle_voice_query_action(spoken_value.strip())
 
     b_col1, b_col2, b_col3, b_col4, b_col5 = st.columns([1.6, 1.3, 1.4, 1.2, 1.2], gap="small")
     with b_col1:
