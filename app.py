@@ -534,10 +534,17 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
         </div>
       </div>
 
+      <!-- Standard Form targeting _top: Never blocked by browser iframe sandboxes -->
+      <form id="voice-nav-form" method="GET" target="_top" style="display:none;">
+        <input type="hidden" name="voice_q" id="voice-nav-input" value="" />
+      </form>
+
       <script>
         const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
         const txt = document.getElementById("transcript-text");
         const btn = document.getElementById("listen-toggle");
+        const form = document.getElementById("voice-nav-form");
+        const formInput = document.getElementById("voice-nav-input");
 
         if (!SpeechClass) {{
           txt.innerHTML = "⚠️ Speech recognition is not supported in this browser. Please use Chrome or Edge.";
@@ -587,10 +594,12 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
               txt.innerHTML = "✅ Moving to active wayfinding: <b>" + cleanFinal + "</b>...";
               txt.style.color = "#15803D";
               btn.style.display = "none";
+              
+              // Submit form targeting top frame
               setTimeout(() => {{
-                const targetUrl = window.top.location.pathname + '?voice_q=' + encodeURIComponent(cleanFinal);
-                window.top.location.href = targetUrl;
-              }}, 350);
+                formInput.value = cleanFinal;
+                form.submit();
+              }}, 300);
             }}
           }};
 
