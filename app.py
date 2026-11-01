@@ -531,6 +531,66 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
       </div>
 
       <script>
+        function executeVoiceNavigation(transcript) {{
+          if (!transcript || !transcript.trim()) return;
+          const cleanQ = transcript.trim();
+
+          // 1. Direct Parent Streamlit DOM bridge for instant transition to Stage 3
+          try {{
+            if (window.parent && window.parent.document) {{
+              const pDoc = window.parent.document;
+              let targetInput = null;
+              const allInputs = pDoc.querySelectorAll('input[type="text"]');
+              for (let inp of allInputs) {{
+                if (inp.placeholder && inp.placeholder.toLowerCase().includes('speak or type')) {{
+                  targetInput = inp;
+                  break;
+                }}
+              }}
+              if (!targetInput) {{
+                targetInput = pDoc.querySelector('.st-key-stage2_voice_input input');
+              }}
+
+              let navBtn = pDoc.querySelector('.st-key-btn_voice_nav_action button');
+              if (!navBtn) {{
+                const allButtons = pDoc.querySelectorAll('button');
+                for (let b of allButtons) {{
+                  if (b.innerText && b.innerText.includes('Navigate')) {{
+                    navBtn = b;
+                    break;
+                  }}
+                }}
+              }}
+
+              if (targetInput && navBtn) {{
+                const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+                nativeSetter.call(targetInput, cleanQ);
+                targetInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                targetInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                setTimeout(() => {{
+                  navBtn.click();
+                }}, 100);
+                return;
+              }}
+            }}
+          }} catch(e) {{
+            console.warn("DOM bridge attempt:", e);
+          }}
+
+          // 2. Query parameter redirection fallback
+          try {{
+            window.top.location.search = '?voice_q=' + encodeURIComponent(cleanQ);
+          }} catch (e1) {{
+            try {{
+              window.parent.location.search = '?voice_q=' + encodeURIComponent(cleanQ);
+            }} catch (e2) {{
+              try {{
+                window.location.search = '?voice_q=' + encodeURIComponent(cleanQ);
+              }} catch (e3) {{}}
+            }}
+          }}
+        }}
+
         const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
         const txt = document.getElementById("transcript-text");
         const btn = document.getElementById("listen-toggle");
@@ -577,18 +637,16 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
             }}
             const spoken = (final || interim).trim();
             if (spoken) {{
-              txt.innerHTML = "🗣️ <i>" + spoken + "</i>";
+              txt.innerHTML = "🗣️ <i>"" + spoken + ""</i>";
             }}
             if (final.trim().length > 0) {{
-              const cleanFinal = encodeURIComponent(final.trim());
-              txt.innerHTML = "✅ Processing: <b>" + final.trim() + "</b>...";
+              const cleanFinal = final.trim();
+              txt.innerHTML = "✅ Moving to active wayfinding: <b>"" + cleanFinal + ""</b>...";
+              txt.style.color = "#15803D";
+              btn.style.display = "none";
               setTimeout(() => {{
-                try {{
-                  window.top.location.search = '?voice_q=' + cleanFinal;
-                }} catch (e) {{
-                  window.parent.location.search = '?voice_q=' + cleanFinal;
-                }}
-              }}, 300);
+                executeVoiceNavigation(cleanFinal);
+              }}, 350);
             }}
           }};
 
@@ -1402,6 +1460,8 @@ elif cur_step == 2:
             else:
                 st.session_state["mic_active"] = "assistant"
                 st.rerun()
+        elif v_user_query and v_user_query.strip():
+            handle_voice_query_action(v_user_query.strip())
 
         if st.session_state.get("mic_active") in ("assistant", True):
             render_live_mic_banner(active_lang, key_suffix="assistant")
