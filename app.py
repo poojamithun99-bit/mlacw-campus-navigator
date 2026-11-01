@@ -561,19 +561,59 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
         }}
 
         function sendToStreamlit(value) {{
-          if (window.Streamlit) {{
-            window.Streamlit.setComponentValue(value);
-          }}
-          // Fallback anchor click in case direct component bridge is restricted
+          let dispatched = false;
           try {{
-            const a = document.createElement('a');
-            let path = '';
-            try {{ path = window.parent.location.pathname; }} catch(err) {{ path = ''; }}
-            a.href = (path || '') + '?voice_q=' + encodeURIComponent(value);
-            a.target = '_top';
-            document.body.appendChild(a);
-            a.click();
+            const parentDoc = (window.parent && window.parent.document) ? window.parent.document : document;
+            const inputEl = parentDoc.querySelector('.st-key-hidden_voice_buffer input') ||
+                            parentDoc.querySelector('input[aria-label="Hidden Voice Buffer"]') ||
+                            parentDoc.querySelector('.st-key-hidden_voice_buffer_nav input') ||
+                            parentDoc.querySelector('input[aria-label="Hidden Voice Buffer Nav"]') ||
+                            parentDoc.querySelector('.st-key-stage2_voice_input input') ||
+                            parentDoc.querySelector('input[aria-label="Ask Voice Assistant:"]');
+            const triggerBtn = parentDoc.querySelector('.st-key-btn_hidden_voice_trigger button') ||
+                               parentDoc.querySelector('.st-key-btn_hidden_voice_trigger_nav button') ||
+                               parentDoc.querySelector('.st-key-btn_voice_nav_action button');
+
+            if (inputEl) {{
+              const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+              if (nativeInputValueSetter) {{
+                nativeInputValueSetter.call(inputEl, value);
+              }} else {{
+                inputEl.value = value;
+              }}
+              inputEl.dispatchEvent(new Event('input', {{ bubbles: true }}));
+              inputEl.dispatchEvent(new Event('change', {{ bubbles: true }}));
+
+              if (triggerBtn) {{
+                setTimeout(() => {{
+                  try {{ triggerBtn.click(); }} catch(e) {{}}
+                }}, 75);
+              }} else {{
+                inputEl.dispatchEvent(new KeyboardEvent('keydown', {{ key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }}));
+              }}
+              dispatched = true;
+            }}
+          }} catch(err) {{
+            console.warn("DOM input bridge error:", err);
+          }}
+
+          // Fallback A: PostMessage
+          try {{
+            window.parent.postMessage({{ type: 'VOICE_NAV', voice_q: value, query: value }}, '*');
           }} catch(e) {{}}
+
+          // Fallback B: URL anchor click if not dispatched directly
+          if (!dispatched) {{
+            try {{
+              const a = document.createElement('a');
+              let path = '';
+              try {{ path = window.parent.location.pathname; }} catch(err) {{ path = ''; }}
+              a.href = (path || '') + '?voice_q=' + encodeURIComponent(value);
+              a.target = '_top';
+              document.body.appendChild(a);
+              a.click();
+            }} catch(e) {{}}
+          }}
         }}
 
         if (window.Streamlit) {{
@@ -1425,6 +1465,35 @@ elif cur_step == 2:
             </html>
             """
             components.html(stage2_confirm_html, height=105, scrolling=False)
+
+        # Hidden input & action bridge for instantaneous voice dispatch
+        v_voice_box = st.text_input(
+            "Hidden Voice Buffer",
+            key="hidden_voice_buffer",
+            label_visibility="collapsed"
+        )
+        v_voice_trigger = st.button("Trigger Voice", key="btn_hidden_voice_trigger")
+        render_html("""
+        <style>
+        div.st-key-hidden_voice_buffer,
+        div.st-key-btn_hidden_voice_trigger {
+            display: none !important;
+            height: 0 !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        </style>
+        """)
+
+        # When hidden voice input contains speech, execute immediately
+        if (v_voice_box and str(v_voice_box).strip()) or v_voice_trigger:
+            recognized_text = str(v_voice_box).strip() if (v_voice_box and str(v_voice_box).strip()) else str(st.session_state.get("hidden_voice_buffer", "")).strip()
+            if recognized_text:
+                st.session_state["hidden_voice_buffer"] = ""
+                st.session_state["mic_active"] = False
+                st.session_state["app_step"] = 3
+                handle_voice_query_action(recognized_text)
 
         v_in_col1, v_in_col2, v_in_col3 = st.columns([3.4, 1.4, 1.2], gap="small")
         with v_in_col1:
@@ -2551,6 +2620,31 @@ else:
 
         # Live Listening Banner if mic is active in navigation
         if st.session_state.get("mic_active") == "navigation":
+            v_voice_box_nav = st.text_input(
+                "Hidden Voice Buffer Nav",
+                key="hidden_voice_buffer_nav",
+                label_visibility="collapsed"
+            )
+            v_voice_trigger_nav = st.button("Trigger Voice Nav", key="btn_hidden_voice_trigger_nav")
+            render_html("""
+            <style>
+            div.st-key-hidden_voice_buffer_nav,
+            div.st-key-btn_hidden_voice_trigger_nav {
+                display: none !important;
+                height: 0 !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            </style>
+            """)
+            if (v_voice_box_nav and str(v_voice_box_nav).strip()) or v_voice_trigger_nav:
+                rec_nav = str(v_voice_box_nav).strip() if (v_voice_box_nav and str(v_voice_box_nav).strip()) else str(st.session_state.get("hidden_voice_buffer_nav", "")).strip()
+                if rec_nav:
+                    st.session_state["hidden_voice_buffer_nav"] = ""
+                    st.session_state["mic_active"] = False
+                    st.session_state["app_step"] = 3
+                    handle_voice_query_action(rec_nav)
             render_live_mic_banner(active_lang, key_suffix="navigation")
 
         # Active Checkpoint Hero Card (Showing ONLY the active checkpoint)
