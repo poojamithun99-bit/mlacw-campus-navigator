@@ -436,281 +436,255 @@ def handle_voice_query_action(q_text: str):
     return
 
 
+# ----------------------------------------------------
+# Real Bidirectional Streamlit Voice Component
+# ----------------------------------------------------
+VOICE_COMP_DIR = os.path.join(BASE_DIR, "voice_component_native")
+os.makedirs(VOICE_COMP_DIR, exist_ok=True)
+
+VOICE_INDEX_HTML = """<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .mic-box {
+    background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
+    border: 2px solid #E11D48;
+    border-radius: 12px;
+    padding: 12px 16px;
+    box-sizing: border-box;
+  }
+  .mic-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .pulse-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 18px;
+  }
+  .pulse-bar {
+    width: 4px;
+    height: 100%;
+    background: #E11D48;
+    border-radius: 2px;
+    animation: pulse 0.8s ease-in-out infinite alternate;
+  }
+  .pulse-bar:nth-child(2) { animation-delay: 0.2s; }
+  .pulse-bar:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse {
+    0% { height: 30%; }
+    100% { height: 100%; }
+  }
+  #transcript-view {
+    margin-top: 10px;
+    background: #FFFFFF;
+    border: 1.5px dashed #F43F5E;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13.5px;
+    color: #0F172A;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .mic-btn {
+    background: #E11D48;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 15px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .mic-btn:hover {
+    background: #BE123C;
+  }
+</style>
+</head>
+<body>
+  <div class="mic-box">
+    <div class="mic-status-row">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="pulse-indicator">
+          <div class="pulse-bar"></div>
+          <div class="pulse-bar"></div>
+          <div class="pulse-bar"></div>
+        </div>
+        <div>
+          <span style="font-weight:800; color:#9F1239; font-size:13.5px;">🔴 VOICE ASSISTANT LISTENING</span>
+          <div style="font-size:11px; color:#BE123C;">ಧ್ವನಿ ಆಲಿಸಲಾಗುತ್ತಿದೆ • बोलें, सिस्टम सुन रहा है...</div>
+        </div>
+      </div>
+      <div id="lang-tag" style="font-size:11px; font-weight:700; color:#9F1239; background:#FFE4E6; border:1px solid #FECDD3; padding:3px 8px; border-radius:12px;">
+        Voice Ready
+      </div>
+    </div>
+
+    <div id="transcript-view">
+      <span id="transcript-text" style="color:#0369A1; font-weight:600;">🎙️ Click 'Start Speaking' and state your destination...</span>
+      <button class="mic-btn" id="listen-toggle">🎙️ Start Speaking</button>
+    </div>
+  </div>
+
+  <script>
+    function sendValueToStreamlit(value) {
+      window.parent.postMessage({
+        isStreamlitMessage: true,
+        type: "streamlit:setComponentValue",
+        value: value
+      }, "*");
+    }
+
+    function setFrameHeight(height) {
+      window.parent.postMessage({
+        isStreamlitMessage: true,
+        type: "streamlit:setFrameHeight",
+        height: height
+      }, "*");
+    }
+
+    function setComponentReady() {
+      window.parent.postMessage({
+        isStreamlitMessage: true,
+        type: "streamlit:componentReady",
+        apiVersion: 1
+      }, "*");
+    }
+
+    setComponentReady();
+    setFrameHeight(125);
+    window.addEventListener("DOMContentLoaded", () => {
+      setComponentReady();
+      setFrameHeight(125);
+    });
+
+    const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const txt = document.getElementById("transcript-text");
+    const btn = document.getElementById("listen-toggle");
+
+    // Listen for language args from Streamlit
+    let currentLangCode = "en-IN";
+    window.addEventListener("message", function(event) {
+      if (event.data && event.data.type === "streamlit:render") {
+        const args = event.data.args || {};
+        if (args.lang_code) {
+          currentLangCode = args.lang_code;
+          const tag = document.getElementById("lang-tag");
+          if (tag) tag.innerText = (args.lang || "Language") + " (" + currentLangCode + ")";
+        }
+      }
+    });
+
+    if (!SpeechClass) {
+      txt.innerHTML = "⚠️ Speech recognition is not supported in this browser. Please use Chrome or Edge.";
+      btn.style.display = "none";
+    } else {
+      const recognition = new SpeechClass();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      let isListening = false;
+      let hasCompleted = false;
+
+      btn.onclick = () => {
+        if (!isListening) {
+          try {
+            hasCompleted = false;
+            recognition.lang = currentLangCode;
+            recognition.start();
+          } catch (err) {
+            console.warn(err);
+          }
+        } else {
+          recognition.stop();
+        }
+      };
+
+      recognition.onstart = () => {
+        isListening = true;
+        btn.textContent = "🔴 Listening...";
+        btn.style.background = "#9F1239";
+        txt.innerHTML = "Listening... Speak clearly now.";
+      };
+
+      recognition.onresult = (event) => {
+        let interim = '';
+        let final = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            final += event.results[i][0].transcript;
+          } else {
+            interim += event.results[i][0].transcript;
+          }
+        }
+        const spoken = (final || interim).trim();
+        if (spoken) {
+          txt.innerHTML = "🗣️ <i>" + spoken + "</i>";
+        }
+        if (final.trim().length > 0) {
+          hasCompleted = true;
+          const clean = final.trim();
+          txt.innerHTML = "✅ Navigating: <b>" + clean + "</b>...";
+          txt.style.color = "#15803D";
+          btn.style.display = "none";
+
+          setTimeout(() => {
+            sendValueToStreamlit(clean);
+          }, 200);
+        }
+      };
+
+      recognition.onerror = (e) => {
+        isListening = false;
+        btn.textContent = "🎙️ Start Speaking";
+        btn.style.background = "#E11D48";
+        if (e.error === 'not-allowed') {
+          txt.innerHTML = "⚠️ Microphone access was blocked. Please allow mic permissions in the address bar.";
+        } else if (e.error === 'no-speech') {
+          txt.innerHTML = "⚠️ No speech detected. Click Start to try again.";
+        } else {
+          txt.innerHTML = "⚠️ Error: " + e.error;
+        }
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        if (!hasCompleted) {
+          btn.textContent = "🎙️ Start Speaking";
+          btn.style.background = "#E11D48";
+        }
+      };
+    }
+  </script>
+</body>
+</html>
+"""
+
+with open(os.path.join(VOICE_COMP_DIR, "index.html"), "w", encoding="utf-8") as f:
+    f.write(VOICE_INDEX_HTML)
+
+_native_voice_component = components.declare_component("voice_assistant_component", path=VOICE_COMP_DIR)
+
 def render_live_mic_banner(lang: str, key_suffix: str = "main"):
     lang_code = {"Kannada": "kn-IN", "Hindi": "hi-IN", "English": "en-IN"}.get(lang, "en-IN")
     
-    component_html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <meta charset="utf-8">
-    <script src="./streamlit-component-lib.js"></script>
-    <style>
-      body {{
-        margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      }}
-      .mic-box {{
-        background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
-        border: 2px solid #E11D48;
-        border-radius: 12px;
-        padding: 12px 16px;
-        box-sizing: border-box;
-      }}
-      .mic-status-row {{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 10px;
-      }}
-      .pulse-indicator {{
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        height: 18px;
-      }}
-      .pulse-bar {{
-        width: 4px;
-        height: 100%;
-        background: #E11D48;
-        border-radius: 2px;
-        animation: pulse 0.8s ease-in-out infinite alternate;
-      }}
-      .pulse-bar:nth-child(2) {{ animation-delay: 0.2s; }}
-      .pulse-bar:nth-child(3) {{ animation-delay: 0.4s; }}
-      @keyframes pulse {{
-        0% {{ height: 30%; }}
-        100% {{ height: 100%; }}
-      }}
-      #transcript-view {{
-        margin-top: 10px;
-        background: #FFFFFF;
-        border: 1.5px dashed #F43F5E;
-        border-radius: 8px;
-        padding: 8px 12px;
-        font-size: 13.5px;
-        color: #0F172A;
-        min-height: 38px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-      }}
-      .mic-btn {{
-        background: #E11D48;
-        color: #FFFFFF;
-        border: none;
-        border-radius: 6px;
-        padding: 7px 15px;
-        font-weight: 700;
-        font-size: 13px;
-        cursor: pointer;
-        white-space: nowrap;
-      }}
-      .mic-btn:hover {{
-        background: #BE123C;
-      }}
-    </style>
-    </head>
-    <body>
-      <div class="mic-box">
-        <div class="mic-status-row">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <div class="pulse-indicator">
-              <div class="pulse-bar"></div>
-              <div class="pulse-bar"></div>
-              <div class="pulse-bar"></div>
-            </div>
-            <div>
-              <span style="font-weight:800; color:#9F1239; font-size:13.5px;">🔴 VOICE ASSISTANT LISTENING</span>
-              <div style="font-size:11px; color:#BE123C;">ಧ್ವನಿ ಆಲಿಸಲಾಗುತ್ತಿದೆ • बोलें, सिस्टम सुन रहा है...</div>
-            </div>
-          </div>
-          <div style="font-size:11px; font-weight:700; color:#9F1239; background:#FFE4E6; border:1px solid #FECDD3; padding:3px 8px; border-radius:12px;">
-            {lang} ({lang_code})
-          </div>
-        </div>
-
-        <div id="transcript-view">
-          <span id="transcript-text" style="color:#0369A1; font-weight:600;">🎙️ Click 'Start Speaking' and state your destination...</span>
-          <button class="mic-btn" id="listen-toggle">🎙️ Start Speaking</button>
-        </div>
-      </div>
-
-      <script>
-        // Ensure Streamlit component bridge is always available
-        if (!window.Streamlit) {{
-          (function() {{
-            function sendMessage(type, data) {{
-              try {{
-                window.parent.postMessage(Object.assign({{
-                  isStreamlitMessage: true,
-                  type: type
-                }}, data || {{}}), "*");
-              }} catch (e) {{
-                console.warn("Streamlit sendMessage error:", e);
-              }}
-            }}
-            window.Streamlit = {{
-              setComponentReady: function() {{ sendMessage("streamlit:componentReady", {{ apiVersion: 1 }}); }},
-              setFrameHeight: function(h) {{ sendMessage("streamlit:setFrameHeight", {{ height: h }}); }},
-              setComponentValue: function(v) {{ sendMessage("streamlit:setComponentValue", {{ value: v }}); }}
-            }};
-            try {{ window.Streamlit.setComponentReady(); }} catch(e) {{}}
-          }})();
-        }}
-
-        function sendToStreamlit(value) {{
-          let dispatched = false;
-          try {{
-            const parentDoc = (window.parent && window.parent.document) ? window.parent.document : document;
-            const inputEl = parentDoc.querySelector('.st-key-hidden_voice_buffer input') ||
-                            parentDoc.querySelector('input[aria-label="Hidden Voice Buffer"]') ||
-                            parentDoc.querySelector('.st-key-hidden_voice_buffer_nav input') ||
-                            parentDoc.querySelector('input[aria-label="Hidden Voice Buffer Nav"]') ||
-                            parentDoc.querySelector('.st-key-stage2_voice_input input') ||
-                            parentDoc.querySelector('input[aria-label="Ask Voice Assistant:"]');
-            const triggerBtn = parentDoc.querySelector('.st-key-btn_hidden_voice_trigger button') ||
-                               parentDoc.querySelector('.st-key-btn_hidden_voice_trigger_nav button') ||
-                               parentDoc.querySelector('.st-key-btn_voice_nav_action button');
-
-            if (inputEl) {{
-              const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-              if (nativeInputValueSetter) {{
-                nativeInputValueSetter.call(inputEl, value);
-              }} else {{
-                inputEl.value = value;
-              }}
-              inputEl.dispatchEvent(new Event('input', {{ bubbles: true }}));
-              inputEl.dispatchEvent(new Event('change', {{ bubbles: true }}));
-
-              if (triggerBtn) {{
-                setTimeout(() => {{
-                  try {{ triggerBtn.click(); }} catch(e) {{}}
-                }}, 75);
-              }} else {{
-                inputEl.dispatchEvent(new KeyboardEvent('keydown', {{ key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }}));
-              }}
-              dispatched = true;
-            }}
-          }} catch(err) {{
-            console.warn("DOM input bridge error:", err);
-          }}
-
-          // Fallback A: PostMessage
-          try {{
-            window.parent.postMessage({{ type: 'VOICE_NAV', voice_q: value, query: value }}, '*');
-          }} catch(e) {{}}
-
-          // Fallback B: URL anchor click if not dispatched directly
-          if (!dispatched) {{
-            try {{
-              const a = document.createElement('a');
-              let path = '';
-              try {{ path = window.parent.location.pathname; }} catch(err) {{ path = ''; }}
-              a.href = (path || '') + '?voice_q=' + encodeURIComponent(value);
-              a.target = '_top';
-              document.body.appendChild(a);
-              a.click();
-            }} catch(e) {{}}
-          }}
-        }}
-
-        if (window.Streamlit) {{
-          window.Streamlit.setFrameHeight(130);
-        }}
-
-        const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const txt = document.getElementById("transcript-text");
-        const btn = document.getElementById("listen-toggle");
-
-        if (!SpeechClass) {{
-          txt.innerHTML = "⚠️ Speech recognition is not supported in this browser. Please use Chrome or Edge.";
-          btn.style.display = "none";
-        }} else {{
-          const recognition = new SpeechClass();
-          recognition.continuous = false;
-          recognition.interimResults = true;
-          recognition.lang = "{lang_code}";
-          let isListening = false;
-          let hasRecognizedFinal = false;
-
-          btn.onclick = () => {{
-            if (!isListening) {{
-              try {{
-                hasRecognizedFinal = false;
-                recognition.start();
-              }} catch (err) {{
-                console.warn(err);
-              }}
-            }} else {{
-              recognition.stop();
-            }}
-          }};
-
-          recognition.onstart = () => {{
-            isListening = true;
-            btn.textContent = "🔴 Listening...";
-            btn.style.background = "#9F1239";
-            txt.innerHTML = "Listening... Speak clearly now.";
-          }};
-
-          recognition.onresult = (event) => {{
-            let interim = '';
-            let final = '';
-            for (let i = event.resultIndex; i < event.results.length; ++i) {{
-              if (event.results[i].isFinal) {{
-                final += event.results[i][0].transcript;
-              }} else {{
-                interim += event.results[i][0].transcript;
-              }}
-            }}
-            const spoken = (final || interim).trim();
-            if (spoken) {{
-              txt.innerHTML = "🗣️ <i>" + spoken + "</i>";
-            }}
-            if (final.trim().length > 0) {{
-              hasRecognizedFinal = true;
-              const cleanFinal = final.trim();
-              txt.innerHTML = "✅ Moving to active wayfinding: <b>" + cleanFinal + "</b>...";
-              txt.style.color = "#15803D";
-              btn.style.display = "none";
-
-              setTimeout(() => {{
-                sendToStreamlit(cleanFinal);
-              }}, 200);
-            }}
-          }};
-
-          recognition.onerror = (e) => {{
-            isListening = false;
-            btn.textContent = "🎙️ Start Speaking";
-            btn.style.background = "#E11D48";
-            if (e.error === 'not-allowed') {{
-              txt.innerHTML = "⚠️ Microphone access was blocked. Please allow mic permissions in the address bar.";
-            }} else if (e.error === 'no-speech') {{
-              txt.innerHTML = "⚠️ No speech detected. Click Start to try again.";
-            }} else {{
-              txt.innerHTML = "⚠️ Error: " + e.error;
-            }}
-          }};
-
-          recognition.onend = () => {{
-            isListening = false;
-            if (!hasRecognizedFinal) {{
-              btn.textContent = "🎙️ Start Speaking";
-              btn.style.background = "#E11D48";
-            }}
-          }};
-        }}
-      </script>
-    </body>
-    </html>
-    """
-
-    spoken_value = components.html(component_html, height=130, scrolling=False)
-    if spoken_value and isinstance(spoken_value, str) and spoken_value.strip():
-        handle_voice_query_action(spoken_value.strip())
+    # Real bidirectional return value from the component!
+    spoken_transcript = _native_voice_component(lang=lang, lang_code=lang_code, key=f"voice_comp_{key_suffix}")
+    
+    # As soon as the user finishes speaking, Python receives the text and immediately navigates!
+    if spoken_transcript and isinstance(spoken_transcript, str) and spoken_transcript.strip():
+        handle_voice_query_action(spoken_transcript.strip())
 
     b_col1, b_col2, b_col3, b_col4, b_col5 = st.columns([1.6, 1.3, 1.4, 1.2, 1.2], gap="small")
     with b_col1:
@@ -1465,35 +1439,6 @@ elif cur_step == 2:
             </html>
             """
             components.html(stage2_confirm_html, height=105, scrolling=False)
-
-        # Hidden input & action bridge for instantaneous voice dispatch
-        v_voice_box = st.text_input(
-            "Hidden Voice Buffer",
-            key="hidden_voice_buffer",
-            label_visibility="collapsed"
-        )
-        v_voice_trigger = st.button("Trigger Voice", key="btn_hidden_voice_trigger")
-        render_html("""
-        <style>
-        div.st-key-hidden_voice_buffer,
-        div.st-key-btn_hidden_voice_trigger {
-            display: none !important;
-            height: 0 !important;
-            min-height: 0 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-        </style>
-        """)
-
-        # When hidden voice input contains speech, execute immediately
-        if (v_voice_box and str(v_voice_box).strip()) or v_voice_trigger:
-            recognized_text = str(v_voice_box).strip() if (v_voice_box and str(v_voice_box).strip()) else str(st.session_state.get("hidden_voice_buffer", "")).strip()
-            if recognized_text:
-                st.session_state["hidden_voice_buffer"] = ""
-                st.session_state["mic_active"] = False
-                st.session_state["app_step"] = 3
-                handle_voice_query_action(recognized_text)
 
         v_in_col1, v_in_col2, v_in_col3 = st.columns([3.4, 1.4, 1.2], gap="small")
         with v_in_col1:
@@ -2620,31 +2565,6 @@ else:
 
         # Live Listening Banner if mic is active in navigation
         if st.session_state.get("mic_active") == "navigation":
-            v_voice_box_nav = st.text_input(
-                "Hidden Voice Buffer Nav",
-                key="hidden_voice_buffer_nav",
-                label_visibility="collapsed"
-            )
-            v_voice_trigger_nav = st.button("Trigger Voice Nav", key="btn_hidden_voice_trigger_nav")
-            render_html("""
-            <style>
-            div.st-key-hidden_voice_buffer_nav,
-            div.st-key-btn_hidden_voice_trigger_nav {
-                display: none !important;
-                height: 0 !important;
-                min-height: 0 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            </style>
-            """)
-            if (v_voice_box_nav and str(v_voice_box_nav).strip()) or v_voice_trigger_nav:
-                rec_nav = str(v_voice_box_nav).strip() if (v_voice_box_nav and str(v_voice_box_nav).strip()) else str(st.session_state.get("hidden_voice_buffer_nav", "")).strip()
-                if rec_nav:
-                    st.session_state["hidden_voice_buffer_nav"] = ""
-                    st.session_state["mic_active"] = False
-                    st.session_state["app_step"] = 3
-                    handle_voice_query_action(rec_nav)
             render_live_mic_banner(active_lang, key_suffix="navigation")
 
         # Active Checkpoint Hero Card (Showing ONLY the active checkpoint)
