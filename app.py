@@ -64,6 +64,43 @@ def render_html(html_str: str, sidebar: bool = False):
         st.markdown(cleaned, unsafe_allow_html=True)
 
 # ----------------------------------------------------
+# Top-Level Parent Window Message Bridge for Voice Queries
+# ----------------------------------------------------
+render_html("""
+<img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'></svg>" style="display:none;" 
+onload="(function(){
+    if (!window._mlacwVoiceNavAttached) {
+        window._mlacwVoiceNavAttached = true;
+        window.addEventListener('message', function(event) {
+            if (event && event.data && (event.data.type === 'VOICE_NAV' || event.data.voice_q)) {
+                var q = event.data.query || event.data.voice_q;
+                if (q && typeof q === 'string' && q.trim().length > 0) {
+                    var base = window.location.pathname || '/';
+                    if (!base.endsWith('/')) base = base + '/';
+                    window.location.href = base + '?voice_q=' + encodeURIComponent(q.trim());
+                }
+            }
+        });
+    }
+})()" 
+onerror="(function(){
+    if (!window._mlacwVoiceNavAttached) {
+        window._mlacwVoiceNavAttached = true;
+        window.addEventListener('message', function(event) {
+            if (event && event.data && (event.data.type === 'VOICE_NAV' || event.data.voice_q)) {
+                var q = event.data.query || event.data.voice_q;
+                if (q && typeof q === 'string' && q.trim().length > 0) {
+                    var base = window.location.pathname || '/';
+                    if (!base.endsWith('/')) base = base + '/';
+                    window.location.href = base + '?voice_q=' + encodeURIComponent(q.trim());
+                }
+            }
+        });
+    }
+})()">
+""")
+
+# ----------------------------------------------------
 # 4. Data Loading & Engine Initialization
 # ----------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -542,9 +579,32 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
         const btn = document.getElementById("listen-toggle");
 
         function navigateTop(query) {{
-          const encoded = encodeURIComponent(query.trim());
+          const clean = (query || '').trim();
+          if (!clean) return;
+          const encoded = encodeURIComponent(clean);
           
-          // Method 1: Anchor tag click with target="_top" (bypasses iframe JS sandbox restrictions)
+          // 1. PostMessage to parent & top (Always permitted by browser iframe sandboxes)
+          try {{
+            if (window.parent) {{
+              window.parent.postMessage({{ type: 'VOICE_NAV', query: clean, voice_q: clean }}, '*');
+            }}
+          }} catch(e) {{}}
+          try {{
+            if (window.top && window.top !== window.parent) {{
+              window.top.postMessage({{ type: 'VOICE_NAV', query: clean, voice_q: clean }}, '*');
+            }}
+          }} catch(e) {{}}
+
+          // 2. Direct parent navigation if same-origin permitted
+          try {{
+            if (window.parent && window.parent.location) {{
+              const p = window.parent.location.pathname || '/';
+              window.parent.location.href = p + '?voice_q=' + encoded;
+              return;
+            }}
+          }} catch(e) {{}}
+
+          // 3. Anchor click targeting _top (natively permitted by standard browser link handling)
           try {{
             const link = document.createElement('a');
             link.href = '/?voice_q=' + encoded;
@@ -556,17 +616,28 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
             console.warn("Anchor click failed:", e);
           }}
 
-          // Method 2: Fallback to window.top.location assign
+          // 4. Form submission targeting _top
           try {{
-            if (window.top && window.top.location) {{
-              window.top.location.href = window.top.location.pathname + '?voice_q=' + encoded;
-              return;
-            }}
+            const form = document.createElement('form');
+            form.method = 'GET';
+            form.action = '/';
+            form.target = '_top';
+            const inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = 'voice_q';
+            inp.value = clean;
+            form.appendChild(inp);
+            document.body.appendChild(form);
+            form.submit();
+            return;
           }} catch(e) {{}}
 
-          // Method 3: Fallback to parent location
+          // 5. Fallback direct top window assign
           try {{
-            window.parent.location.href = window.parent.location.pathname + '?voice_q=' + encoded;
+            if (window.top && window.top.location) {{
+              const p = window.top.location.pathname || '/';
+              window.top.location.href = p + '?voice_q=' + encoded;
+            }}
           }} catch(e) {{}}
         }}
 
@@ -580,11 +651,13 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
           recognition.lang = "{lang_code}";
           let isListening = false;
           let hasRecognizedFinal = false;
+          let latestHeard = "";
 
           btn.onclick = () => {{
             if (!isListening) {{
               try {{
                 hasRecognizedFinal = false;
+                latestHeard = "";
                 recognition.start();
               }} catch (err) {{
                 console.warn(err);
@@ -613,6 +686,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
             }}
             const spoken = (final || interim).trim();
             if (spoken) {{
+              latestHeard = spoken;
               txt.innerHTML = "🗣️ <i>" + spoken + "</i>";
             }}
             if (final.trim().length > 0) {{
@@ -624,7 +698,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
 
               setTimeout(() => {{
                 navigateTop(cleanFinal);
-              }}, 250);
+              }}, 200);
             }}
           }};
 
@@ -643,11 +717,24 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
 
           recognition.onend = () => {{
             isListening = false;
-            // Only restore "Start Speaking" if we didn't already capture a final answer
-            if (!hasRecognizedFinal) {{
-              btn.textContent = "🎙️ Start Speaking";
-              btn.style.background = "#E11D48";
+            // If final was already recognized and navigation started, don't reset
+            if (hasRecognizedFinal) return;
+
+            // If we heard speech in interim results before silence ended the session, navigate!
+            if (latestHeard && latestHeard.trim().length > 1) {{
+              hasRecognizedFinal = true;
+              const cleanHeard = latestHeard.trim();
+              txt.innerHTML = "✅ Navigating: <b>" + cleanHeard + "</b>...";
+              txt.style.color = "#15803D";
+              btn.style.display = "none";
+              setTimeout(() => {{
+                navigateTop(cleanHeard);
+              }}, 200);
+              return;
             }}
+
+            btn.textContent = "🎙️ Start Speaking";
+            btn.style.background = "#E11D48";
           }};
         }}
       </script>
@@ -677,9 +764,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
 
 # Check URL query param bridge for Web Speech STT transcripts
 if "voice_q" in st.query_params:
-    raw_v_query = str(st.query_params["voice_q"]).strip()
-    # Clear query param to prevent infinite reload loops
-    del st.query_params["voice_q"]
+    raw_v_query = str(st.query_params.pop("voice_q", "")).strip()
     if raw_v_query:
         handle_voice_query_action(raw_v_query)
 
