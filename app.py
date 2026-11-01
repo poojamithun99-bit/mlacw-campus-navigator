@@ -427,8 +427,9 @@ def handle_voice_query_action(q_text: str):
 
     # Immediate response for instant browser TTS speech without network blocking
     st.session_state["voice_assistant_response"] = (spoken_ans, detected_language, None)
-    st.session_state["auto_speech"] = True
     st.session_state["app_step"] = 3
+    st.session_state["auto_speech"] = True
+    st.session_state["mic_active"] = False
     set_route_endpoint(chosen_dest, "destination", trigger_speech=True)
     return
 
@@ -440,6 +441,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
     <!DOCTYPE html>
     <html>
     <head>
+    <meta charset="utf-8">
     <style>
       body {{
         margin: 0;
@@ -449,7 +451,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
         background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
         border: 2px solid #E11D48;
         border-radius: 12px;
-        padding: 14px 18px;
+        padding: 12px 16px;
         box-sizing: border-box;
       }}
       .mic-status-row {{
@@ -462,7 +464,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        height: 20px;
+        height: 18px;
       }}
       .pulse-bar {{
         width: 4px;
@@ -482,23 +484,25 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
         background: #FFFFFF;
         border: 1.5px dashed #F43F5E;
         border-radius: 8px;
-        padding: 10px 14px;
-        font-size: 14px;
+        padding: 8px 12px;
+        font-size: 13.5px;
         color: #0F172A;
-        min-height: 40px;
+        min-height: 38px;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 10px;
       }}
       .mic-btn {{
         background: #E11D48;
         color: #FFFFFF;
         border: none;
         border-radius: 6px;
-        padding: 8px 16px;
+        padding: 7px 15px;
         font-weight: 700;
         font-size: 13px;
         cursor: pointer;
+        white-space: nowrap;
       }}
       .mic-btn:hover {{
         background: #BE123C;
@@ -515,103 +519,42 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
               <div class="pulse-bar"></div>
             </div>
             <div>
-              <span style="font-weight:800; color:#9F1239; font-size:14px;">🔴 VOICE ASSISTANT LISTENING</span>
+              <span style="font-weight:800; color:#9F1239; font-size:13.5px;">🔴 VOICE ASSISTANT LISTENING</span>
               <div style="font-size:11px; color:#BE123C;">ಧ್ವನಿ ಆಲಿಸಲಾಗುತ್ತಿದೆ • बोलें, सिस्टम सुन रहा है...</div>
             </div>
           </div>
-          <div style="font-size:11px; font-weight:700; color:#9F1239; background:#FFE4E6; border:1px solid #FECDD3; padding:4px 8px; border-radius:12px;">
-            Lang: {lang_code}
+          <div style="font-size:11px; font-weight:700; color:#9F1239; background:#FFE4E6; border:1px solid #FECDD3; padding:3px 8px; border-radius:12px;">
+            {lang} ({lang_code})
           </div>
         </div>
 
         <div id="transcript-view">
-          <span id="transcript-text" style="color:#0369A1; font-weight:600;">🎙️ Click 'Start Speaking' and say your destination...</span>
+          <span id="transcript-text" style="color:#0369A1; font-weight:600;">🎙️ Click 'Start Speaking' and state your destination...</span>
           <button class="mic-btn" id="listen-toggle">🎙️ Start Speaking</button>
         </div>
       </div>
 
       <script>
-        function executeVoiceNavigation(transcript) {{
-          if (!transcript || !transcript.trim()) return;
-          const cleanQ = transcript.trim();
-
-          // 1. Direct Parent Streamlit DOM bridge for instant transition to Stage 3
-          try {{
-            if (window.parent && window.parent.document) {{
-              const pDoc = window.parent.document;
-              let targetInput = null;
-              const allInputs = pDoc.querySelectorAll('input[type="text"]');
-              for (let inp of allInputs) {{
-                if (inp.placeholder && inp.placeholder.toLowerCase().includes('speak or type')) {{
-                  targetInput = inp;
-                  break;
-                }}
-              }}
-              if (!targetInput) {{
-                targetInput = pDoc.querySelector('.st-key-stage2_voice_input input');
-              }}
-
-              let navBtn = pDoc.querySelector('.st-key-btn_voice_nav_action button');
-              if (!navBtn) {{
-                const allButtons = pDoc.querySelectorAll('button');
-                for (let b of allButtons) {{
-                  if (b.innerText && b.innerText.includes('Navigate')) {{
-                    navBtn = b;
-                    break;
-                  }}
-                }}
-              }}
-
-              if (targetInput && navBtn) {{
-                const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-                nativeSetter.call(targetInput, cleanQ);
-                targetInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                targetInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                setTimeout(() => {{
-                  navBtn.click();
-                }}, 100);
-                return;
-              }}
-            }}
-          }} catch(e) {{
-            console.warn("DOM bridge attempt:", e);
-          }}
-
-          // 2. Query parameter redirection fallback
-          try {{
-            window.top.location.search = '?voice_q=' + encodeURIComponent(cleanQ);
-          }} catch (e1) {{
-            try {{
-              window.parent.location.search = '?voice_q=' + encodeURIComponent(cleanQ);
-            }} catch (e2) {{
-              try {{
-                window.location.search = '?voice_q=' + encodeURIComponent(cleanQ);
-              }} catch (e3) {{}}
-            }}
-          }}
-        }}
-
         const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
         const txt = document.getElementById("transcript-text");
         const btn = document.getElementById("listen-toggle");
 
         if (!SpeechClass) {{
-          txt.innerHTML = "⚠️ Speech Recognition is not supported in this browser. Please use Chrome or Edge.";
+          txt.innerHTML = "⚠️ Speech recognition is not supported in this browser. Please use Chrome or Edge.";
           btn.style.display = "none";
         }} else {{
           const recognition = new SpeechClass();
           recognition.continuous = false;
           recognition.interimResults = true;
           recognition.lang = "{lang_code}";
-
-          let active = false;
+          let isListening = false;
 
           btn.onclick = () => {{
-            if (!active) {{
+            if (!isListening) {{
               try {{
                 recognition.start();
-              }} catch (e) {{
-                console.warn(e);
+              }} catch (err) {{
+                console.warn(err);
               }}
             }} else {{
               recognition.stop();
@@ -619,7 +562,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
           }};
 
           recognition.onstart = () => {{
-            active = true;
+            isListening = true;
             btn.textContent = "🔴 Listening...";
             btn.style.background = "#9F1239";
             txt.innerHTML = "Listening... Speak clearly now.";
@@ -637,25 +580,26 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
             }}
             const spoken = (final || interim).trim();
             if (spoken) {{
-              txt.innerHTML = "🗣️ <i>"" + spoken + ""</i>";
+              txt.innerHTML = "🗣️ <i>" + spoken + "</i>";
             }}
             if (final.trim().length > 0) {{
               const cleanFinal = final.trim();
-              txt.innerHTML = "✅ Moving to active wayfinding: <b>"" + cleanFinal + ""</b>...";
+              txt.innerHTML = "✅ Moving to active wayfinding: <b>" + cleanFinal + "</b>...";
               txt.style.color = "#15803D";
               btn.style.display = "none";
               setTimeout(() => {{
-                executeVoiceNavigation(cleanFinal);
+                const targetUrl = window.top.location.pathname + '?voice_q=' + encodeURIComponent(cleanFinal);
+                window.top.location.href = targetUrl;
               }}, 350);
             }}
           }};
 
           recognition.onerror = (e) => {{
-            active = false;
+            isListening = false;
             btn.textContent = "🎙️ Start Speaking";
             btn.style.background = "#E11D48";
             if (e.error === 'not-allowed') {{
-              txt.innerHTML = "⚠️ Microphone access was blocked. Please allow mic permissions in your browser.";
+              txt.innerHTML = "⚠️ Microphone access was blocked. Please allow mic permissions in the address bar.";
             }} else if (e.error === 'no-speech') {{
               txt.innerHTML = "⚠️ No speech detected. Click Start to try again.";
             }} else {{
@@ -664,7 +608,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
           }};
 
           recognition.onend = () => {{
-            active = false;
+            isListening = false;
             btn.textContent = "🎙️ Start Speaking";
             btn.style.background = "#E11D48";
           }};
@@ -697,6 +641,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
 # Check URL query param bridge for Web Speech STT transcripts
 if "voice_q" in st.query_params:
     raw_v_query = str(st.query_params["voice_q"]).strip()
+    # Clear query param to prevent infinite reload loops
     del st.query_params["voice_q"]
     if raw_v_query:
         handle_voice_query_action(raw_v_query)
