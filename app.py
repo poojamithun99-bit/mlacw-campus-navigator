@@ -315,6 +315,8 @@ def handle_voice_query_action(q_text: str):
         return
     clean_q = str(q_text).strip()
     clean_cmd = clean_q.lower()
+    st.session_state["mic_active"] = False
+    st.session_state["app_step"] = 3
 
     # 1. Spoken Voice Navigation Commands during active navigation
     if any(w in clean_cmd for w in ["next", "forward", "ಮುಂದೆ", "ಮುಂದಿನ", "आगे", "अगला", "done", "reached", "ತಲುಪಿದೆ", "ಪಹುँच गए"]):
@@ -539,23 +541,33 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
         const txt = document.getElementById("transcript-text");
         const btn = document.getElementById("listen-toggle");
 
-        function redirectParent(query) {{
-          const encoded = encodeURIComponent(query);
+        function navigateTop(query) {{
+          const encoded = encodeURIComponent(query.trim());
+          
+          // Method 1: Anchor tag click with target="_top" (bypasses iframe JS sandbox restrictions)
+          try {{
+            const link = document.createElement('a');
+            link.href = '/?voice_q=' + encoded;
+            link.target = '_top';
+            document.body.appendChild(link);
+            link.click();
+            return;
+          }} catch(e) {{
+            console.warn("Anchor click failed:", e);
+          }}
+
+          // Method 2: Fallback to window.top.location assign
           try {{
             if (window.top && window.top.location) {{
-              window.top.location.search = '?voice_q=' + encoded;
+              window.top.location.href = window.top.location.pathname + '?voice_q=' + encoded;
               return;
             }}
-          }} catch (e) {{}}
+          }} catch(e) {{}}
 
+          // Method 3: Fallback to parent location
           try {{
-            if (window.parent && window.parent.location) {{
-              window.parent.location.search = '?voice_q=' + encoded;
-              return;
-            }}
-          }} catch (e) {{}}
-
-          window.location.search = '?voice_q=' + encoded;
+            window.parent.location.href = window.parent.location.pathname + '?voice_q=' + encoded;
+          }} catch(e) {{}}
         }}
 
         if (!SpeechClass) {{
@@ -567,10 +579,12 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
           recognition.interimResults = true;
           recognition.lang = "{lang_code}";
           let isListening = false;
+          let hasRecognizedFinal = false;
 
           btn.onclick = () => {{
             if (!isListening) {{
               try {{
+                hasRecognizedFinal = false;
                 recognition.start();
               }} catch (err) {{
                 console.warn(err);
@@ -602,14 +616,15 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
               txt.innerHTML = "🗣️ <i>" + spoken + "</i>";
             }}
             if (final.trim().length > 0) {{
+              hasRecognizedFinal = true;
               const cleanFinal = final.trim();
-              txt.innerHTML = "✅ Moving to active wayfinding: <b>" + cleanFinal + "</b>...";
+              txt.innerHTML = "✅ Navigating: <b>" + cleanFinal + "</b>...";
               txt.style.color = "#15803D";
               btn.style.display = "none";
 
               setTimeout(() => {{
-                redirectParent(cleanFinal);
-              }}, 200);
+                navigateTop(cleanFinal);
+              }}, 250);
             }}
           }};
 
@@ -628,8 +643,11 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
 
           recognition.onend = () => {{
             isListening = false;
-            btn.textContent = "🎙️ Start Speaking";
-            btn.style.background = "#E11D48";
+            // Only restore "Start Speaking" if we didn't already capture a final answer
+            if (!hasRecognizedFinal) {{
+              btn.textContent = "🎙️ Start Speaking";
+              btn.style.background = "#E11D48";
+            }}
           }};
         }}
       </script>
