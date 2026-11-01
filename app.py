@@ -64,45 +64,6 @@ def render_html(html_str: str, sidebar: bool = False):
         st.markdown(cleaned, unsafe_allow_html=True)
 
 # ----------------------------------------------------
-# Top-Level Parent Window Navigation Bridge for Voice Queries
-# ----------------------------------------------------
-# Attaches an event listener to the parent Streamlit window via an inline image onerror trigger.
-# This ensures that when sandboxed iframes (e.g. SpeechRecognition in components.html) post a
-# 'VOICE_NAV' message, the top-level window directly updates its location without being blocked
-# by iframe sandbox restrictions (e.g. missing allow-top-navigation).
-render_html("""
-<img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'></svg>" style="display:none;" onload="(function(){
-    if (!window._mlacwVoiceNavAttached) {
-        window._mlacwVoiceNavAttached = true;
-        window.addEventListener('message', function(event) {
-            if (event && event.data && (event.data.type === 'VOICE_NAV' || event.data.voice_q)) {
-                var q = event.data.query || event.data.voice_q;
-                if (q && typeof q === 'string' && q.trim().length > 0) {
-                    var base = window.location.origin + window.location.pathname;
-                    if (base.endsWith('/')) base = base.slice(0, -1);
-                    window.location.href = base + '/?voice_q=' + encodeURIComponent(q.trim());
-                }
-            }
-        });
-    }
-})()" onerror="(function(){
-    if (!window._mlacwVoiceNavAttached) {
-        window._mlacwVoiceNavAttached = true;
-        window.addEventListener('message', function(event) {
-            if (event && event.data && (event.data.type === 'VOICE_NAV' || event.data.voice_q)) {
-                var q = event.data.query || event.data.voice_q;
-                if (q && typeof q === 'string' && q.trim().length > 0) {
-                    var base = window.location.origin + window.location.pathname;
-                    if (base.endsWith('/')) base = base.slice(0, -1);
-                    window.location.href = base + '/?voice_q=' + encodeURIComponent(q.trim());
-                }
-            }
-        });
-    }
-})()">
-""")
-
-# ----------------------------------------------------
 # 4. Data Loading & Engine Initialization
 # ----------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -479,303 +440,100 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
     <!DOCTYPE html>
     <html>
     <head>
-    <meta charset="utf-8">
     <style>
-      * {{
-        box-sizing: border-box;
+      body {{
         margin: 0;
-        padding: 0;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       }}
-      body {{
-        background: transparent;
-        overflow: hidden;
-        padding: 2px;
-      }}
       .mic-box {{
-        background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 55%, #FECDD3 100%);
+        background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
         border: 2px solid #E11D48;
         border-radius: 12px;
-        padding: 10px 14px;
-        box-shadow: 0 4px 14px rgba(225, 29, 72, 0.14);
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+        padding: 14px 18px;
+        box-sizing: border-box;
       }}
       .mic-status-row {{
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 8px;
-      }}
-      .status-left {{
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        gap: 10px;
       }}
       .pulse-indicator {{
         display: inline-flex;
         align-items: center;
-        gap: 3px;
-        height: 18px;
+        gap: 4px;
+        height: 20px;
       }}
       .pulse-bar {{
-        width: 3.5px;
+        width: 4px;
         height: 100%;
         background: #E11D48;
         border-radius: 2px;
-        animation: pulseAnim 0.75s ease-in-out infinite alternate;
+        animation: pulse 0.8s ease-in-out infinite alternate;
       }}
-      .pulse-bar:nth-child(2) {{ animation-delay: 0.15s; }}
-      .pulse-bar:nth-child(3) {{ animation-delay: 0.3s; }}
-      .pulse-bar:nth-child(4) {{ animation-delay: 0.45s; }}
-      @keyframes pulseAnim {{
-        0% {{ height: 25%; opacity: 0.5; }}
-        100% {{ height: 100%; opacity: 1; }}
-      }}
-      .brand-title {{
-        font-weight: 800;
-        color: #9F1239;
-        font-size: 13.5px;
-        letter-spacing: 0.4px;
-      }}
-      .brand-subtitle {{
-        font-size: 11px;
-        color: #BE123C;
-        font-weight: 600;
-      }}
-      .lang-badge {{
-        font-size: 11px;
-        font-weight: 700;
-        color: #9F1239;
-        background: #FFFFFF;
-        border: 1px solid #FECDD3;
-        padding: 3px 8px;
-        border-radius: 12px;
-        white-space: nowrap;
-        box-shadow: 0 1px 3px rgba(225, 29, 72, 0.08);
+      .pulse-bar:nth-child(2) {{ animation-delay: 0.2s; }}
+      .pulse-bar:nth-child(3) {{ animation-delay: 0.4s; }}
+      @keyframes pulse {{
+        0% {{ height: 30%; }}
+        100% {{ height: 100%; }}
       }}
       #transcript-view {{
+        margin-top: 10px;
         background: #FFFFFF;
         border: 1.5px dashed #F43F5E;
         border-radius: 8px;
-        padding: 8px 12px;
-        font-size: 13.5px;
+        padding: 10px 14px;
+        font-size: 14px;
         color: #0F172A;
-        min-height: 42px;
+        min-height: 40px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
-      }}
-      #transcript-text {{
-        color: #0369A1;
-        font-weight: 600;
-        flex: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }}
-      .btn-container {{
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        flex-shrink: 0;
       }}
       .mic-btn {{
         background: #E11D48;
         color: #FFFFFF;
         border: none;
         border-radius: 6px;
-        padding: 7px 14px;
+        padding: 8px 16px;
         font-weight: 700;
-        font-size: 12.5px;
+        font-size: 13px;
         cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        box-shadow: 0 1px 4px rgba(225, 29, 72, 0.25);
-        transition: all 0.15s ease;
       }}
       .mic-btn:hover {{
         background: #BE123C;
-      }}
-      .nav-btn {{
-        background: #0284C7;
-        color: #FFFFFF !important;
-        border: none;
-        border-radius: 6px;
-        padding: 7px 15px;
-        font-weight: 800;
-        font-size: 13px;
-        cursor: pointer;
-        display: none;
-        align-items: center;
-        gap: 5px;
-        box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
-        transition: all 0.15s ease;
-      }}
-      .nav-btn:hover {{
-        background: #0369A1;
-        transform: translateY(-1px);
-      }}
-      .chips-row {{
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        flex-wrap: wrap;
-        margin-top: 1px;
-      }}
-      .chips-label {{
-        font-size: 11px;
-        color: #9F1239;
-        font-weight: 700;
-        margin-right: 2px;
-      }}
-      .chip-link {{
-        background: #FFFFFF;
-        border: 1px solid #FECDD3;
-        color: #9F1239;
-        padding: 2.5px 9px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: 700;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
-        transition: all 0.15s ease;
-      }}
-      .chip-link:hover {{
-        background: #FFE4E6;
-        border-color: #E11D48;
-        transform: translateY(-1px);
       }}
     </style>
     </head>
     <body>
       <div class="mic-box">
         <div class="mic-status-row">
-          <div class="status-left">
+          <div style="display:flex; align-items:center; gap:8px;">
             <div class="pulse-indicator">
-              <div class="pulse-bar"></div>
               <div class="pulse-bar"></div>
               <div class="pulse-bar"></div>
               <div class="pulse-bar"></div>
             </div>
             <div>
-              <span class="brand-title">🔴 VOICE ASSISTANT LISTENING</span>
-              <span class="brand-subtitle" style="margin-left:6px;">ಧ್ವನಿ ಆಲಿಸಲಾಗುತ್ತಿದೆ • बोलें, सिस्टम सुन रहा है...</span>
+              <span style="font-weight:800; color:#9F1239; font-size:14px;">🔴 VOICE ASSISTANT LISTENING</span>
+              <div style="font-size:11px; color:#BE123C;">ಧ್ವನಿ ಆಲಿಸಲಾಗುತ್ತಿದೆ • बोलें, सिस्टम सुन रहा है...</div>
             </div>
           </div>
-          <div class="lang-badge">
+          <div style="font-size:11px; font-weight:700; color:#9F1239; background:#FFE4E6; border:1px solid #FECDD3; padding:4px 8px; border-radius:12px;">
             Lang: {lang_code}
           </div>
         </div>
 
         <div id="transcript-view">
-          <span id="transcript-text">🎙️ Click 'Start Speaking' and say your destination...</span>
-          <div class="btn-container">
-            <button class="nav-btn" id="btn-voice-nav" onclick="triggerNavAction()">🚀 Navigate ➔</button>
-            <button class="mic-btn" id="listen-toggle">🎙️ Start Speaking</button>
-          </div>
-        </div>
-
-        <div class="chips-row">
-          <span class="chips-label">Or tap to navigate:</span>
-          <a class="chip-link" href="javascript:void(0)" onclick="navigateTop('Central Library'); return false;">📚 Library</a>
-          <a class="chip-link" href="javascript:void(0)" onclick="navigateTop('Dept. of Computer Science & Staff Room'); return false;">💻 Computer Science</a>
-          <a class="chip-link" href="javascript:void(0)" onclick="navigateTop('Classroom G11'); return false;">🏫 Classroom G11</a>
-          <a class="chip-link" href="javascript:void(0)" onclick="navigateTop('Girls Washroom'); return false;">🚻 Washroom</a>
-          <a class="chip-link" href="javascript:void(0)" onclick="navigateTop('Canteen Area'); return false;">☕ Canteen</a>
+          <span id="transcript-text" style="color:#0369A1; font-weight:600;">🎙️ Click 'Start Speaking' and say your destination...</span>
+          <button class="mic-btn" id="listen-toggle">🎙️ Start Speaking</button>
         </div>
       </div>
 
       <script>
-        // Attach listener to parent window if not yet registered
-        try {{
-          if (window.parent && !window.parent._mlacwVoiceNavAttached) {{
-            window.parent._mlacwVoiceNavAttached = true;
-            window.parent.addEventListener('message', function(event) {{
-              if (event && event.data && (event.data.type === 'VOICE_NAV' || event.data.voice_q)) {{
-                var q = event.data.query || event.data.voice_q;
-                if (q && typeof q === 'string' && q.trim().length > 0) {{
-                  var base = window.parent.location.origin + window.parent.location.pathname;
-                  if (base.endsWith('/')) base = base.slice(0, -1);
-                  window.parent.location.href = base + '/?voice_q=' + encodeURIComponent(q.trim());
-                }}
-              }}
-            }});
-          }}
-        }} catch(e) {{}}
-
-        let recognizedDestination = "";
-
-        function navigateTop(dest) {{
-          if (!dest || !dest.trim()) return;
-          const cleanQ = dest.trim();
-
-          const navBtn = document.getElementById("btn-voice-nav");
-          const txt = document.getElementById("transcript-text");
-          if (navBtn) {{
-            navBtn.style.display = "inline-flex";
-            navBtn.innerHTML = "<span>⏳ Navigating...</span>";
-            navBtn.style.background = "#15803D";
-            navBtn.style.pointerEvents = "none";
-          }}
-          if (txt) {{
-            txt.innerHTML = "✅ Navigating to: <b>" + cleanQ + "</b>...";
-            txt.style.color = "#15803D";
-          }}
-
-          // Channel 1: postMessage to window.parent
-          try {{
-            if (window.parent) {{
-              window.parent.postMessage({{ type: 'VOICE_NAV', query: cleanQ, voice_q: cleanQ }}, '*');
-            }}
-          }} catch(e) {{}}
-
-          // Channel 2: postMessage to window.top
-          try {{
-            if (window.top) {{
-              window.top.postMessage({{ type: 'VOICE_NAV', query: cleanQ, voice_q: cleanQ }}, '*');
-            }}
-          }} catch(e) {{}}
-
-          // Channel 3: Inject dynamic script into parent document
-          try {{
-            if (window.parent && window.parent.document && window.parent.document.body) {{
-              const scr = window.parent.document.createElement('script');
-              scr.textContent = 'window.location.search = "?voice_q=" + ' + JSON.stringify(cleanQ) + ';';
-              window.parent.document.body.appendChild(scr);
-            }}
-          }} catch(e) {{}}
-
-          // Channel 4: Direct assignment fallback
-          setTimeout(function() {{
-            try {{
-              if (window.parent && window.parent.location) {{
-                window.parent.location.search = '?voice_q=' + encodeURIComponent(cleanQ);
-              }}
-            }} catch(e) {{
-              try {{
-                window.top.location.search = '?voice_q=' + encodeURIComponent(cleanQ);
-              }} catch(e2) {{}}
-            }}
-          }}, 300);
-        }}
-
-        function triggerNavAction() {{
-          if (recognizedDestination) {{
-            navigateTop(recognizedDestination);
-          }}
-        }}
-
         const SpeechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
         const txt = document.getElementById("transcript-text");
         const btn = document.getElementById("listen-toggle");
-        const navBtn = document.getElementById("btn-voice-nav");
 
         if (!SpeechClass) {{
           txt.innerHTML = "⚠️ Speech Recognition is not supported in this browser. Please use Chrome or Edge.";
@@ -804,8 +562,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
             active = true;
             btn.textContent = "🔴 Listening...";
             btn.style.background = "#9F1239";
-            txt.innerHTML = "Listening... Speak your destination clearly now.";
-            txt.style.color = "#BE123C";
+            txt.innerHTML = "Listening... Speak clearly now.";
           }};
 
           recognition.onresult = (event) => {{
@@ -820,20 +577,18 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
             }}
             const spoken = (final || interim).trim();
             if (spoken) {{
-              txt.innerHTML = "🗣️ <b>\"" + spoken + "\"</b>";
-              txt.style.color = "#0F172A";
+              txt.innerHTML = "🗣️ <i>" + spoken + "</i>";
             }}
             if (final.trim().length > 0) {{
-              recognizedDestination = final.trim();
-              btn.style.display = "none";
-              navBtn.style.display = "inline-flex";
-              txt.innerHTML = "🗣️ <b>\"" + recognizedDestination + "\"</b>";
-              txt.style.color = "#0F172A";
-
-              // Automatically navigate after 800ms visual confirmation
+              const cleanFinal = encodeURIComponent(final.trim());
+              txt.innerHTML = "✅ Processing: <b>" + final.trim() + "</b>...";
               setTimeout(() => {{
-                navigateTop(recognizedDestination);
-              }}, 800);
+                try {{
+                  window.top.location.search = '?voice_q=' + cleanFinal;
+                }} catch (e) {{
+                  window.parent.location.search = '?voice_q=' + cleanFinal;
+                }}
+              }}, 300);
             }}
           }};
 
@@ -852,10 +607,8 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
 
           recognition.onend = () => {{
             active = false;
-            if (!recognizedDestination) {{
-              btn.textContent = "🎙️ Start Speaking";
-              btn.style.background = "#E11D48";
-            }}
+            btn.textContent = "🎙️ Start Speaking";
+            btn.style.background = "#E11D48";
           }};
         }}
       </script>
@@ -863,7 +616,7 @@ def render_live_mic_banner(lang: str, key_suffix: str = "main"):
     </html>
     """
 
-    components.html(component_html, height=148, scrolling=False)
+    components.html(component_html, height=125, scrolling=False)
 
     b_col1, b_col2, b_col3, b_col4, b_col5 = st.columns([1.6, 1.3, 1.4, 1.2, 1.2], gap="small")
     with b_col1:
